@@ -1,12 +1,9 @@
-name := "cacher"
+val hoarder = project
 
-version := "1.0"
+val hoarderTests = project dependsOn hoarder settings(
+  publishLocal := {
+    (publishLocal in hoarder).value
+   publishLocal.value
+  })
 
-scalaVersion := "2.10.6"
-
-sbtPlugin := true
-
-organization := "org.romanowski"
-
-libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.4" % Test
-
+val root = project aggregate(hoarder, hoarderTests)

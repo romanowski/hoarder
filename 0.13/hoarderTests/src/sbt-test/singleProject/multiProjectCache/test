@@ -1,0 +1,7 @@
+> exportCache
+> clean
+$ exists leafProject/cache/analysis.txt
+$ exists baseProject/cache/analysis.txt
+> leafProject/testCacheImport
+> baseProject/testCacheImport
+# TODO add incremental recompile

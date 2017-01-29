@@ -1,0 +1,5 @@
+> exportCache
+> clean
+$ exists cache/analysis.txt
+> testCacheImport
+# TODO add incremental recompile
