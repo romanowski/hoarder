@@ -3,7 +3,7 @@ package base
 import akka.actor.Actor
 
 
-class BaseTest {
+class Base {
 
 }
 

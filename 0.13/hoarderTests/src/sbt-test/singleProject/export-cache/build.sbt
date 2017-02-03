@@ -1,7 +1,5 @@
 import org.romanowski.Hoarder._
 
-useStaticCache
-
-exportCacheLocation := target.value.toPath.getParent.resolve("cache")
+useStash
 
 org.romanowski.hoarder.tests.PluginTests.testRecompilation

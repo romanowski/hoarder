@@ -1,9 +1,9 @@
 package leaf
 
-import base.BaseTest
+import base.Base
 import akka.actor.Actor
 
-class Test extends BaseTest {
+class Leaf extends Base {
 
 }
 

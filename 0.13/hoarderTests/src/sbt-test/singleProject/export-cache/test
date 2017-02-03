@@ -1,5 +1,6 @@
-> exportCache
+> stash
 > clean
 $ exists cache/analysis.txt
+> stashApply
 > testCacheImport
 # TODO add incremental recompile

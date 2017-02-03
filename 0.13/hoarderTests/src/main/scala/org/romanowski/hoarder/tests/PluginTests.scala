@@ -8,16 +8,29 @@ import sbt._
 
 object PluginTests {
 
-  def testRecompilation = Seq(TaskKey[Unit]("testCacheImport") := {
-    val result = (manipulateBytecode in Compile).value
-    assert(!result.hasModified)
+  private val runTestKey = TaskKey[Unit]("")
 
-    val classesDir = (classDirectory in Compile).value
+  private def runTest = Def.task {
+    val result = manipulateBytecode.value
+    assert(!result.hasModified, "Compilation after import was no no-op!")
+
+    val classesDir = classDirectory.value
     val allClasses = (classesDir ** "*.class").get
-    assert(allClasses.nonEmpty)
-  },
-    scalaVersion := "2.11.8"
-  )
+    assert(allClasses.nonEmpty, s"No classes present in $classesDir!")
+
+    streams.value.log.success(s"Nothing modified in $classesDir")
+  }
+
+  def testRecompilation =
+    inConfig(Compile)(runTestKey <<= runTest) ++
+      inConfig(Test)(runTestKey <<= runTest) ++ Seq(
+      TaskKey[Unit]("testCacheImport") := {
+        streams.value.log.success(s"Testing for ${name.value}")
+        runTestKey.in(Compile).value
+        runTestKey.in(Test).value
+      },
+      scalaVersion := "2.11.8"
+    )
 
 
 }

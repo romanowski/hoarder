@@ -1,9 +1,7 @@
 import org.romanowski.Hoarder._
 
 
-def settings = Seq(
-  exportCacheLocation := target.value.toPath.getParent.resolve("cache")
-) ++ org.romanowski.hoarder.tests.PluginTests.testRecompilation ++ useStaticCache
+def settings = org.romanowski.hoarder.tests.PluginTests.testRecompilation ++ useStash
 
 val baseProject = project settings(settings:_*)
 val leafProject = project settings(settings:_*) dependsOn(baseProject)
