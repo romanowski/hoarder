@@ -1,7 +1,7 @@
 > stash
 > clean
 > stashApply
-$ exists leafProject/cache/analysis.txt
-$ exists baseProject/cache/analysis.txt
+# $ exists leafProject/cache/analysis.txt
+# $ exists baseProject/cache/analysis.txt
 > testCacheImport
 # TODO add incremental recompile

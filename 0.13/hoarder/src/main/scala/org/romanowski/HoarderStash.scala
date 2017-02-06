@@ -12,11 +12,13 @@ object HoarderStash extends HoarderEngine {
   val stashKey = TaskKey[Unit]("stash", "Stash results of your current compilation")
   val stashApplyKey = TaskKey[Unit]("stashApply", "Stash results of your current compilation")
 
-  val doStashKey = InputKey[Unit]("Stash results of your current compilation")
+  private val doStashKey = InputKey[Unit]("doStashKey", "Stash results of your current compilation")
+  private val doStashApplyKey = InputKey[Unit]("doStashApplyKey", "Apply stashed results of your current compilation")
+
 
   val defaultVersionLabel = SettingKey[String]("Default label for project")
   val globalLabel = SettingKey[String]("Default label for project")
-  val stashLocation = SettingKey[File]("Place where stashed artifacts are kept")
+  val stashLocation = TaskKey[File]("Place where stashed artifacts are kept")
   val overrideExisting = SettingKey[Boolean]("Override existing stash")
 
 
@@ -27,6 +29,16 @@ object HoarderStash extends HoarderEngine {
       case Seq(currentProjectLabel, label) => (label, currentProjectLabel)
       case _ => throw new IllegalArgumentException("Only one args is required!") // TODO add proper parser!
     }
+  }
+
+  def doStashApplyImpl = Def.inputTask {
+    val (currentLabel, currentGlobalLabel) = askForLabels.evaluated
+    val location = stashLocation.value / currentGlobalLabel / currentLabel
+    val setup = projectSetupFor.value
+
+    importCacheTaskImpl(setup, CleanClasses, location.toPath)
+    streams.value.log.info(s"Cache imported from ${setup.classesRoot} to use with ${setup.classesRoot}")
+
   }
 
   def doStashImpl = Def.inputTask {
@@ -46,18 +58,24 @@ object HoarderStash extends HoarderEngine {
 
   private def defaultSettings = Seq(
     defaultVersionLabel := "HEAD",
-
-
+    globalLabel := file(".").getName,
+    stashLocation := dependencyCacheDirectory.value / ".." / "sbt-stash",
+    overrideExisting := true
   )
 
+  private def perConfigSettings = Seq(doStashKey <<= doStashImpl, doStashApplyKey <<= doStashApplyImpl)
+
   def settings =
-    inConfig(Compile)(doStashKey <<= doStashImpl) ++
-      inConfig(Test)(doStashKey <<= doStashImpl) ++ Seq(
+    inConfig(Compile)(perConfigSettings) ++ inConfig(Test)(perConfigSettings) ++ Seq(
       stashKey := {
         (doStashKey in Compile).value
         (doStashKey in Test).value
+      },
+      stashApplyKey := {
+        (doStashApplyKey in Compile).value
+        (doStashApplyKey in Test).value
       }
-    )
+    ) ++ defaultSettings
 
 }
 
