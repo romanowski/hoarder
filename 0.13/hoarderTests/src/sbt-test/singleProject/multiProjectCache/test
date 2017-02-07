@@ -1,7 +1,8 @@
+> test:compile
 > stash
+$ touch .cached-compilation
 > clean
 > stashApply
-# $ exists leafProject/cache/analysis.txt
-# $ exists baseProject/cache/analysis.txt
+$ touch .cached-compilation-done
 > testCacheImport
 # TODO add incremental recompile

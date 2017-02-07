@@ -1,4 +1,4 @@
-package org.romanowski
+package org.romanowski.hoarder.core
 
 sealed trait CleanOutputMode
 

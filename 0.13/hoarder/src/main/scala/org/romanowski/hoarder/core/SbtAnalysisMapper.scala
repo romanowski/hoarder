@@ -1,11 +1,10 @@
-package org.romanowski.hoarder
+package org.romanowski.hoarder.core
 
 import java.io.File
 import java.nio.file.Path
 
-import sbt.{Artifact, Attributed, ModuleID}
+import sbt.Attributed
 import sbt.Keys._
-import sbt.Package.Configuration
 import sbt.inc.Stamp
 import sbt.internal.inc.{AnalysisMappers, ContextAwareMapper, FormatCommons, Mapper}
 
