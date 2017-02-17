@@ -18,7 +18,7 @@ resolvers += Resolver.sonatypeRepo("snapshots")
 addSbtPlugin("com.github.romanowski" % "hoarder" % "1.0-SNAPSHOT")
 ```
 
-Hoarder does not have stable release so far and you can track progress [for sbt 0.13.x](https://github.com/romanowski/hoarder/milestone/1) and [and 1.0.x](https://github.com/romanowski/hoarder/milestone/2)
+Hoarder does not have stable release so far and you can track progress for sbt [0.13.x](https://github.com/romanowski/hoarder/milestone/1) and [1.0.x](https://github.com/romanowski/hoarder/milestone/2)
 
 ## Integration with you project
 
@@ -36,7 +36,7 @@ Not implemented yet. See [#2](https://github.com/romanowski/hoarder/issues/2) fo
 
 ## Cached compilaiton. How does it work?
 
-[Zinc incremental compier](https://github.com/sbt/zinc/)(previously part of sbt) beside classfiles generates incremental compilation metadata that allows it later to recompile only subset of classfiles. In [this PR](https://github.com/romanowski/zinc/pull/2) zinc was able to export that metadata in format that can be reused.
+[Zinc incremental compier](https://github.com/sbt/zinc/) (previously part of sbt) beside classfiles generates incremental compilation metadata that allows it later to recompile only subset of classfiles. In [this PR](https://github.com/romanowski/zinc/pull/2) zinc was able to export that metadata in format that can be reused.
 
  
 
