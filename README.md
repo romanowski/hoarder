@@ -31,7 +31,7 @@ Running `stash` task will store your current compilation in global directory for
 
 ### From release
 
-Not implemented yet. See #2 for more detalis.
+Not implemented yet. See [#2](https://github.com/romanowski/hoarder/issues/2) for more detalis.
 
 
 ## Cached compilaiton. How does it work?
