@@ -11,19 +11,32 @@ Using cache will not make your local workspace read-only, once cached is importe
 
 ## Getting started
 
-TODO (based in integration belows)
+In order to use Hoarder in your project just add it as standard sbt plugin (for given project or globally):
+
+```scala
+resolvers += Resolver.sonatypeRepo("snapshots")
+addSbtPlugin("com.github.romanowski" % "hoarder" % "1.0-SNAPSHOT")
+```
+
+Hoarder does not have stable release so far and you can track progress [for sbt 0.13.x](https://github.com/romanowski/hoarder/milestone/1) and [and 1.0.x](https://github.com/romanowski/hoarder/milestone/2)
 
 ## Integration with you project
 
-Integration with hoarder comes in two parts: exporting and importing caches. So far it needs to be done manually (importCache/exportCache tasks) but in future it needs to be automated.
+Hoarder can be used in multiple ways in your project that are described below. For now only 'stash' workflow is supported but I am woring on more (feel free to create issue with your own ideas).
 
-TODO add more integrations based on ideas. 
+### Stash
+
+Stash workflow allows you to stash compilation results similarly to changes in git.
+Running `stash` task will store your current compilation in global directory for your project and later you can import that compilation using `stashApply` command. More can be found in [docs](docs/stash.md).
+
+### From release
+
+Not implemented yet see #2
+
 
 ## Cached compilaiton. How does it work?
 
-[Zinc incremental compier](https://github.com/sbt/zinc/)(previously part of sbt) beside classfiles generates incremental compilation metadata that allows it later to recompiler only subset of classfiles. In [this PR](https://github.com/romanowski/zinc/pull/2) zinc was able to export that metadata in format that can be reused.
-
-TODO more detalis!
+[Zinc incremental compier](https://github.com/sbt/zinc/)(previously part of sbt) beside classfiles generates incremental compilation metadata that allows it later to recompile only subset of classfiles. In [this PR](https://github.com/romanowski/zinc/pull/2) zinc was able to export that metadata in format that can be reused.
 
  
 
