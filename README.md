@@ -22,7 +22,7 @@ Hoarder does not have stable release so far and you can track progress for sbt [
 
 ## Integration with you project
 
-Hoarder can be used in multiple ways in your project that are described below. For now only 'stash' workflow is supported but I am woring on more (feel free to create issue with your own ideas).
+Hoarder can be used in multiple ways in your project that are described below. For now only 'stash' workflow is supported but I am working on more (feel free to create issue with your own ideas).
 
 ### Stash
 
@@ -36,7 +36,7 @@ Not implemented yet. See [#2](https://github.com/romanowski/hoarder/issues/2) fo
 
 ## Cached compilaiton. How does it work?
 
-[Zinc incremental compier](https://github.com/sbt/zinc/) (previously part of sbt) beside classfiles generates incremental compilation metadata that allows it later to recompile only subset of classfiles. In [this PR](https://github.com/romanowski/zinc/pull/2) zinc was able to export that metadata in format that can be reused.
+[Zinc incremental compiler](https://github.com/sbt/zinc/) (previously part of sbt) beside classfiles generates incremental compilation metadata that allows it later to recompile only subset of classfiles. In [this PR](https://github.com/romanowski/zinc/pull/2) zinc was able to export that metadata in format that can be reused.
 
  
 
