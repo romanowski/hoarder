@@ -31,7 +31,7 @@ Running `stash` task will store your current compilation in global directory for
 
 ### From release
 
-Not implemented yet see #2
+Not implemented yet. See #2 for more detalis.
 
 
 ## Cached compilaiton. How does it work?
