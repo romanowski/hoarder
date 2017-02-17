@@ -6,10 +6,10 @@ scalaVersion := "2.10.6"
 
 sbtPlugin := true
 
-organization := "org.romanowski"
+organization := "com.github.romanowski"
 
 libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.4" % Test
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6"
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % Test
 
-libraryDependencies +="junit" % "junit" % "4.11"
+libraryDependencies +="junit" % "junit" % "4.11" % Test
