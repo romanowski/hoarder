@@ -1,4 +1,3 @@
-> test:compile
 > stash
 $ touch .cached-compilation
 > clean

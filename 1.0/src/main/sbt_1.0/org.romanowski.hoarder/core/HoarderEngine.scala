@@ -22,7 +22,10 @@ class HoarderEngine extends HoarderEngineCommon {
   type CompilationResult = xsbti.compile.CompileResult
   type PreviousCompilationResult = xsbti.compile.PreviousResult
 
-  protected override def exportCacheTaskImpl(setup: CacheSetup, result: CompilationResult): Unit = {}
+  protected override def exportCacheTaskImpl(setup: CacheSetup,
+                                             result: CompilationResult,
+                                             globalCacheLocation: Path): Unit = {}
 
-  protected override def importCacheTaskImpl(cacheSetup: CacheSetup): Option[PreviousCompilationResult] = None
+  protected override def importCacheTaskImpl(cacheSetup: CacheSetup,
+                                             globalCacheLocation: Path): Option[PreviousCompilationResult] = None
 }

@@ -10,7 +10,7 @@ import java.nio.charset.Charset
 
 import sbt._
 import sbt.Keys._
-import java.nio.file.Path
+import java.nio.file.{Path, Paths}
 
 import org.romanowski.HoarderCommonSettings._
 
@@ -26,28 +26,25 @@ trait HoarderEngineCommon {
                         classesRoot: Path,
                         projectRoot: Path,
                         analysisFile: File,
-                        cacheLocation: Path,
+                        relativeCacheLocation: Path,
                         overrideExistingCache: Boolean,
                         cleanOutputMode: CleanOutputMode
                        )
 
-  protected def exportCacheTaskImpl(setup: CacheSetup, result: CompilationResult): Unit
+  protected def exportCacheTaskImpl(setup: CacheSetup, result: CompilationResult, globalCacheLocation: Path): Unit
 
-  protected def importCacheTaskImpl(cacheSetup: CacheSetup): Option[PreviousCompilationResult]
+  protected def importCacheTaskImpl(cacheSetup: CacheSetup, globalCacheLocation: Path): Option[PreviousCompilationResult]
 
-  protected def projectSetupFor = Def.task[Path => CacheSetup] {
-    path => {
+  protected def projectSetupFor = Def.task[CacheSetup] {
       CacheSetup(
         sourceRoots = managedSourceDirectories.value ++ unmanagedSourceDirectories.value,
         classpath = externalDependencyClasspath.value,
         classesRoot = classDirectory.value.toPath,
         projectRoot = baseDirectory.value.toPath,
         analysisFile = (streams in compileIncSetup).value.cacheDirectory / compileAnalysisFilename.value,
-        cacheLocation = path.resolve(name.value).resolve(configuration.value.name),
+        relativeCacheLocation = Paths.get(name.value).resolve(configuration.value.name),
         overrideExistingCache = overrideExistingCache.value,
         cleanOutputMode = cleanOutputMode.value
       )
     }
-  }
-
 }

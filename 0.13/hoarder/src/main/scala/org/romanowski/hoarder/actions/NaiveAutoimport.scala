@@ -24,7 +24,7 @@ class NaiveAutoimport extends HoarderEngine {
     val location = staticCacheLocation.value
     val result = compileIncremental.value
 
-    exportCacheTaskImpl(projectSetupFor.value(location), result)
+    exportCacheTaskImpl(projectSetupFor.value, result, location)
     streams.value.log.info(s"Cache exported tp $location")
 
     location
@@ -34,7 +34,7 @@ class NaiveAutoimport extends HoarderEngine {
     val location = staticCacheLocation.value
     streams.value.log.info(s"Importing cache from: $location")
 
-    val res = importCacheTaskImpl(projectSetupFor.value(location))
+    val res = importCacheTaskImpl(projectSetupFor.value, location)
       .getOrElse(previousCompile.value)
 
     streams.value.log.info(s"Done")

@@ -1,0 +1,28 @@
+$ mkdir global/sbt-stash/fakeProject/fakeVersion
+-> "stashApply p1 v1"
+-> "stashApply fakeProject fakeVersion2"
+-> "stashApply fakeProject"
+> clean
+> "stash p1 v1"
+$ touch .cached-compilation
+$ touch .cached-compilation-done
+> clean
+> "stashApply fakeProject fakeVersion"
+-> testCacheImport
+> clean
+> "stashApply p1 v1"
+> testCacheImport
+-> "stashApply p1 v1 too-much!"
+> clean
+# Test applying non-existing caches
+-> "stashApply p1"
+> clean
+-> "stashApply failed failed2"
+> clean
+# Test stash with overrides
+$ delete .cached-compilation
+$ delete .cached-compilation-done
+-> "stash p1 v1"
+> "stash p1 v2"
+> "set org.romanowski.HoarderCommonSettings.overrideExistingCache.in(Global) := true"
+> "stash p1 v1"

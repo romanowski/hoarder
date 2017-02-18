@@ -8,7 +8,7 @@ package org.romanowski.hoarder.core
 
 import java.io.File
 import java.nio.charset.Charset
-import java.nio.file.Files
+import java.nio.file.{Files, Path}
 
 import sbt.compiler.{IC, MixedAnalyzingCompiler}
 import sbt.inc.MappableFormat
@@ -23,11 +23,14 @@ class HoarderEngine extends HoarderEngineCommon {
   type PreviousCompilationResult = Compiler.PreviousAnalysis
 
 
-  protected override def exportCacheTaskImpl(setup: CacheSetup, result: CompilationResult): Unit = {
+  protected override def exportCacheTaskImpl(setup: CacheSetup,
+                                             result: CompilationResult,
+                                             globalCacheLocation: Path): Unit = {
     import setup._
+    val cacheLocation = globalCacheLocation.resolve(relativeCacheLocation)
 
     if (Files.exists(cacheLocation)) {
-      if(overrideExistingCache) IO.delete(setup.cacheLocation.toFile)
+      if(overrideExistingCache) IO.delete(cacheLocation.toFile)
       else new IllegalArgumentException(s"Cache already exists at $cacheLocation.")
     }
 
@@ -50,8 +53,10 @@ class HoarderEngine extends HoarderEngineCommon {
     IO.zip(classesToZip, cacheLocation.resolve(classesZipFileName).toFile)
   }
 
-  protected override def importCacheTaskImpl(cacheSetup: CacheSetup): Option[PreviousCompilationResult] = {
+  protected override def importCacheTaskImpl(cacheSetup: CacheSetup,
+                                             globalCacheLocation: Path): Option[PreviousCompilationResult] = {
     import cacheSetup._
+    val cacheLocation = globalCacheLocation.resolve(relativeCacheLocation)
 
     val from = cacheLocation.resolve(analysisCacheFileName)
     val classesZip = cacheLocation.resolve(classesZipFileName)
