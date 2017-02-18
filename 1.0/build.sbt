@@ -1,18 +1,16 @@
-name := "cacher-1.0"
+name := "hoarder"
 
-version := "1.0"
+version := "1.0-SNAPSHOT"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.1"
 
-//sbtPlugin := true
+sbtPlugin := true
 
-organization := "org.romanowski"
+organization := "com.github.romanowski"
 
-libraryDependencies ++= Seq(
-  "org.scala-sbt" %% "zinc" % "1.0-cached-SNAPSHOT",
-  "org.scala-sbt" %% "main" % "1.0.0-cached-SNAPSHOT",
-  "org.scala-sbt" % "sbt" % "1.0.0-cached-SNAPSHOT",
-  "org.scala-sbt" %% "zinc" % "1.0-cached-SNAPSHOT" % "test->test"//, // classifier("tests"),
- // "org.scala-sbt" %% "zinc-testing" % "1.0-cached-SNAPSHOT" % "test->test"
-)
+(unmanagedSourceDirectories in Compile) += baseDirectory.value / "src" / "main" / "sbt_1.0"
 
+
+// Reuse code from 0.13 branch
+scalaSource in Compile := baseDirectory.value / ".." / "0.13" / "hoarder" / "src" / "main" / "scala"
+scalaSource in Test := baseDirectory.value / ".." / "0.13" / "hoarder" / "src" / "test" / "scala"

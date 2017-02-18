@@ -6,38 +6,24 @@
 
 package org.romanowski.hoarder.core
 
+import java.io.File
 import java.nio.charset.Charset
-import java.nio.file.{Files, Path}
-import java.util.concurrent.TimeUnit
+import java.nio.file.Files
 
-import sbt.Keys._
 import sbt.compiler.{IC, MixedAnalyzingCompiler}
 import sbt.inc.MappableFormat
 import sbt.internal.inc.AnalysisMappers
-import sbt.{CompileSetup, Compiler, Def, IO, PathFinder, _}
+import sbt.{PathFinder, _}
 import xsbti.compile.SingleOutput
-import org.romanowski.HoarderCommonSettings._
 
-trait HoarderEngine {
-  val analysisCacheFileName = "analysis.txt"
-  val classesZipFileName = "classes.zip"
 
-  protected def createMapper(projectSetup: CacheSetup): AnalysisMappers = {
-    import projectSetup._
-    new SbtAnalysisMapper(classesRoot, sourceRoots.map(_.toPath), projectRoot, classpath)
-  }
+class HoarderEngine extends HoarderEngineCommon {
 
-  case class CacheSetup(sourceRoots: Seq[File],
-                        classpath: Classpath,
-                        classesRoot: Path,
-                        projectRoot: Path,
-                        analysisFile: File,
-                        cacheLocation: Path,
-                        overrideExistingCache: Boolean,
-                        cleanOutputMode: CleanOutputMode
-                       )
+  type CompilationResult = IC.Result
+  type PreviousCompilationResult = Compiler.PreviousAnalysis
 
-  protected def exportCacheTaskImpl(setup: CacheSetup, result: IC.Result): Unit = {
+
+  protected override def exportCacheTaskImpl(setup: CacheSetup, result: CompilationResult): Unit = {
     import setup._
 
     if (Files.exists(cacheLocation)) {
@@ -64,14 +50,7 @@ trait HoarderEngine {
     IO.zip(classesToZip, cacheLocation.resolve(classesZipFileName).toFile)
   }
 
-  private def ouputForProject(setup: CompileSetup): File = setup.output match {
-    case s: SingleOutput =>
-      s.outputDirectory()
-    case _ =>
-      fail("Cannot use cache in multi-output situation")
-  }
-
-  protected def importCacheTaskImpl(cacheSetup: CacheSetup) = {
+  protected override def importCacheTaskImpl(cacheSetup: CacheSetup): Option[PreviousCompilationResult] = {
     import cacheSetup._
 
     val from = cacheLocation.resolve(analysisCacheFileName)
@@ -107,24 +86,19 @@ trait HoarderEngine {
       val store = MixedAnalyzingCompiler.staticCachedStore(analysisFile)
       store.set(analysis, setup)
 
-    //  TimeUnit.SECONDS.sleep(10)
       Some(Compiler.PreviousAnalysis(analysis, Some(setup)))
     } else None
   }
 
-  protected def projectSetupFor = Def.task[Path => CacheSetup] {
-    path => {
-      CacheSetup(
-        sourceRoots = managedSourceDirectories.value ++ unmanagedSourceDirectories.value,
-        classpath = externalDependencyClasspath.value,
-        classesRoot = classDirectory.value.toPath,
-        projectRoot = baseDirectory.value.toPath,
-        analysisFile = (streams in compileIncSetup).value.cacheDirectory / compileAnalysisFilename.value,
-        cacheLocation = path.resolve(name.value).resolve(configuration.value.name),
-        overrideExistingCache = overrideExistingCache.value,
-        cleanOutputMode = cleanOutputMode.value
-      )
-    }
+  private def createMapper(projectSetup: CacheSetup): AnalysisMappers = {
+    import projectSetup._
+    new SbtAnalysisMapper(classesRoot, sourceRoots.map(_.toPath), projectRoot, classpath)
   }
 
+  private def ouputForProject(setup: CompileSetup): File = setup.output match {
+    case s: SingleOutput =>
+      s.outputDirectory()
+    case _ =>
+      fail("Cannot use cache in multi-output situation")
+  }
 }

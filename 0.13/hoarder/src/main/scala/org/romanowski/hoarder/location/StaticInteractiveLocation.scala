@@ -6,10 +6,10 @@
 
 package org.romanowski.hoarder.location
 
+import org.romanowski.HoarderCommonSettings._
 import sbt.Def._
 import sbt.Keys._
 import sbt._
-import org.romanowski.HoarderCommonSettings._
 
 object StaticInteractiveLocation {
   val defaultVersionLabel = SettingKey[String]("Default label for project")
@@ -36,16 +36,11 @@ object StaticInteractiveLocation {
     file.toPath
   }
 
-  def ala = Def.inputTaskDyn{
-    parser.parsed
-    globalStashLocation
-  }
-
   val settings = Seq(
     defaultVersionLabel := "HEAD",
     globalLabel := file(".").getAbsoluteFile.getParentFile.getName,
     globalStashLocation := dependencyCacheDirectory.value / ".." / "sbt-stash",
-    staticCacheLocation <<= globalCacheLocation.toTask(""),
-    globalCacheLocation <<= askForStashLocation
+    staticCacheLocation := globalCacheLocation.toTask("").value,
+    globalCacheLocation := askForStashLocation.evaluated
   )
 }

@@ -6,15 +6,11 @@
 
 package org.romanowski.hoarder.actions
 
-import java.nio.file.{Files, Path, Paths}
-
 import org.romanowski.HoarderCommonSettings._
 import org.romanowski.hoarder.core.HoarderEngine
 import sbt.Def._
 import sbt.Keys._
 import sbt._
-import sbt.compiler.MixedAnalyzingCompiler
-
 
 object Stash extends HoarderEngine {
 
@@ -41,7 +37,7 @@ object Stash extends HoarderEngine {
     streams.value.log.info(s"Cache exported to ${setup.cacheLocation} from ${setup.classesRoot}")
   }
 
-  private def perConfigSettings = Seq(doStashKey <<= doStashImpl, doStashApplyKey <<= doStashApplyImpl)
+  private def perConfigSettings = Seq(doStashKey := doStashImpl.evaluated, doStashApplyKey := doStashApplyImpl.evaluated)
 
   def settings =
     inConfig(Compile)(perConfigSettings) ++ inConfig(Test)(perConfigSettings) ++ Seq(
