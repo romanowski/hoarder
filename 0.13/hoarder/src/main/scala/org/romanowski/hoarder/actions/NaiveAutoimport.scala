@@ -42,8 +42,8 @@ class NaiveAutoimport extends HoarderEngine {
   }
 
   def settings =
-    inConfig(Compile)(Seq(previousCompile <<= importCacheImpl, doExportCache <<= doExportCacheImpl)) ++
-    inConfig(Compile)(Seq(previousCompile <<= importCacheImpl, doExportCache <<= doExportCacheImpl)) ++ Seq(
+    inConfig(Compile)(Seq(previousCompile := importCacheImpl.value, doExportCache := doExportCacheImpl.value)) ++
+    inConfig(Compile)(Seq(previousCompile := importCacheImpl.value, doExportCache := doExportCacheImpl.value)) ++ Seq(
     exportCache := {
       (doExportCache in Compile).value
       (doExportCache in Test).value

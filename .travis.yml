@@ -7,6 +7,9 @@ script:
   - cd 0.13
   - sbt test
   - sbt scripted
+# Uncomment below after new release of sbt
+#  - cd ../1.0
+#  - sbt test
 
 jdk:
   - oraclejdk8

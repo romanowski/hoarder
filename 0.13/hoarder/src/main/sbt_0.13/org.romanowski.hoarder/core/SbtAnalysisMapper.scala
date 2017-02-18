@@ -66,6 +66,3 @@ class SbtAnalysisMapper(sbtOutput: Path,
   override val productStampMapper: ContextAwareMapper[File, Stamp] =
     Mapper.updateModificationDateFileMapper(productMapper)
 }
-
-
-
