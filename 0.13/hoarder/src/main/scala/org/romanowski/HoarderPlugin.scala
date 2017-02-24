@@ -12,7 +12,11 @@ import sbt.{AllRequirements, AutoPlugin, PluginTrigger}
 
 
 object HoarderPlugin extends AutoPlugin {
-  override def projectSettings = HoarderCommonSettings.defaults ++ Stash.settings ++ StaticInteractiveLocation.settings
+  import HoarderCommonSettings._
+
+  override def projectSettings = Stash.settings
+
+  override def globalSettings: Seq[_root_.sbt.Def.Setting[_]] = StaticInteractiveLocation.settings ++ defaultsGlobal
 
   override def trigger: PluginTrigger = AllRequirements
 }

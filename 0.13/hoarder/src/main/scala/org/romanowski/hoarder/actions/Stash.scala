@@ -17,40 +17,46 @@ object Stash extends HoarderEngine {
   val stashKey = InputKey[Unit]("stash", "Stash results of your current compilation")
   val stashApplyKey = InputKey[Unit]("stashApply", "Stash results of your current compilation")
 
-  private val doStashKey = InputKey[Unit]("doStashKey", "Stash results of your current compilation")
-  private val doStashApplyKey = InputKey[Unit]("doStashApplyKey", "Apply stashed results of your current compilation")
+  private case class StashSetup(cacheSetup: CacheSetup, compilationResult: CompilationResult)
 
-  def doStashApplyImpl = Def.inputTask {
-    val location = globalCacheLocation.evaluated
+  private val doStashData = TaskKey[StashSetup]("doStashData", "Stash results of your current compilation")
+  private val allToStash = TaskKey[Seq[StashSetup]]("allToStash", "Stash results of your current compilation")
 
-    val setup = projectSetupFor.value(location)
+  private val doStashApplyData = TaskKey[CacheSetup]("doStashApplyData", "Stash results of your current compilation")
+  private val allToStashApply = TaskKey[Seq[CacheSetup]]("allToStashApply", "Stash results of your current compilation")
 
-    importCacheTaskImpl(setup)
 
-    streams.value.log.info(s"Cache imported from ${setup.cacheLocation} to use with ${setup.classesRoot} to ${setup.cacheLocation}")
-  }
 
-  def doStashImpl = Def.inputTask {
-    val setup = projectSetupFor.value(globalCacheLocation.evaluated)
-
-    exportCacheTaskImpl(setup, compileIncremental.value)
-    streams.value.log.info(s"Cache exported to ${setup.cacheLocation} from ${setup.classesRoot}")
-  }
-
-  private def perConfigSettings = Seq(doStashKey := doStashImpl.evaluated, doStashApplyKey := doStashApplyImpl.evaluated)
+  private def perConfigSettings = Seq(
+    doStashData := StashSetup(projectSetupFor.value, compileIncremental.value),
+    doStashApplyData := projectSetupFor.value
+  )
 
   def settings =
     inConfig(Compile)(perConfigSettings) ++ inConfig(Test)(perConfigSettings) ++ Seq(
+      allToStash := Seq(doStashData.in(Compile).value, doStashData.in(Test).value),
       stashKey := {
-        streams.value.log.info(s"Running export in ${name.value}")
-        (doStashKey in Compile).evaluated
-        (doStashKey in Test).evaluated
-      },
-      stashApplyKey := {
-        streams.value.log.info(s"Running import in ${name.value}")
+        val globalCache = globalCacheLocationScoped.in(ExportConfig).evaluated
 
-        doStashApplyKey.in(Compile).evaluated
-        doStashApplyKey.in(Test).evaluated
+        val exportedClasses = allToStash.value.map {
+          case StashSetup(cache, result) =>
+            exportCacheTaskImpl(cache, result, globalCache)
+            cache.classesRoot
+        }
+
+        streams.value.log.info(s"Project ${name.value} stashed to $globalCache using classes from $exportedClasses")
+      },
+      allToStashApply := Seq(doStashApplyData.in(Compile).value, doStashApplyData.in(Test).value),
+      stashApplyKey := {
+        val globalCache = globalCacheLocationScoped.in(ImportConfig).evaluated
+
+        val importedClasses = allToStashApply.value.map {
+          cache =>
+            importCacheTaskImpl(cache, globalCache)
+            cache.classesRoot
+        }
+
+        streams.value.log.info(s"Stash for ${name.value} applied from $globalCache to $importedClasses")
       },
       aggregate.in(stashKey) := true,
       aggregate.in(stashApplyKey) := true
