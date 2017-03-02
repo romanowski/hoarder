@@ -1,5 +1,8 @@
 # Hoarder - don't repeat yourself when compiling!
 
+[![Build Status](https://api.travis-ci.org/romanowski/hoarder.png?branch=master)](https://travis-ci.org/romanowski/hoarder)
+[![Gitter room](https://badges.gitter.im/sbt_hoarder/Lobby.svg)](https://gitter.im/sbt_hoarder/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Hoarder is the set of sbt plugins (for sbt 1.0.x and 0.13.x) that allows you to reuse compilation data from other workspaces (aka. _Cached compilation_).
 
 Hoarder is based on zinc (from [this PR](https://github.com/romanowski/zinc/pull/2)). 
