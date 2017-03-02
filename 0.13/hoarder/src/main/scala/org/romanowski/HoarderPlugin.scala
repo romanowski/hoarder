@@ -7,7 +7,6 @@
 package org.romanowski
 
 import org.romanowski.hoarder.actions.Stash
-import org.romanowski.hoarder.location.StaticInteractiveLocation
 import sbt.{AllRequirements, AutoPlugin, PluginTrigger}
 
 
@@ -16,7 +15,7 @@ object HoarderPlugin extends AutoPlugin {
 
   override def projectSettings = Stash.settings
 
-  override def globalSettings: Seq[_root_.sbt.Def.Setting[_]] = StaticInteractiveLocation.settings ++ defaultsGlobal
+  override def globalSettings: Seq[_root_.sbt.Def.Setting[_]] = Stash.globalSettings ++ defaultsGlobal
 
   override def trigger: PluginTrigger = AllRequirements
 }

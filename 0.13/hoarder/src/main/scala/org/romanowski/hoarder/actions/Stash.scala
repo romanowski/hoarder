@@ -6,6 +6,8 @@
 
 package org.romanowski.hoarder.actions
 
+import java.nio.file.{Files, Path}
+
 import org.romanowski.HoarderCommonSettings._
 import org.romanowski.hoarder.core.HoarderEngine
 import sbt.Def._
@@ -14,25 +16,73 @@ import sbt._
 
 object Stash extends HoarderEngine {
 
-  val stashKey = InputKey[Unit]("stash", "Stash results of your current compilation")
-  val stashApplyKey = InputKey[Unit]("stashApply", "Stash results of your current compilation")
+  val stashKey = InputKey[Unit]("stash",
+    "Export results of current compilation to global location.")
+  val stashApplyKey = InputKey[Unit]("stashApply",
+    "Load exported copilation results from global location.")
+  val defaultVersionLabel = SettingKey[String]("defaultVersionLabel",
+    "Default version label for stash/stashApply")
+  val defaultProjectLabel = SettingKey[String]("defaultProjectLabel",
+    "Default root project label for stash/stashApply")
+  val globalStashLocation = TaskKey[File]("globalStashLocation",
+    "Root directory where exported artifacts are kept.")
 
   private case class StashSetup(cacheSetup: CacheSetup, compilationResult: CompilationResult)
 
-  private val doStashData = TaskKey[StashSetup]("doStashData", "Stash results of your current compilation")
-  private val allToStash = TaskKey[Seq[StashSetup]]("allToStash", "Stash results of your current compilation")
+  private val doStashData = TaskKey[StashSetup]("doStashData", "Hoarder internals!")
+  private val allToStash = TaskKey[Seq[StashSetup]]("allToStash", "Hoarder internals!")
+  private val doStashApplyData = TaskKey[CacheSetup]("doStashApplyData", "Hoarder internals!")
+  private val allToStashApply = TaskKey[Seq[CacheSetup]]("allToStashApply", "Hoarder internals!")
+  private val globalCacheLocationScoped = InputKey[Path]("cacheLocationScoped", "Hoarder internals!")
 
-  private val doStashApplyData = TaskKey[CacheSetup]("doStashApplyData", "Stash results of your current compilation")
-  private val allToStashApply = TaskKey[Seq[CacheSetup]]("allToStashApply", "Stash results of your current compilation")
+
+  private val ImportConfig = config("cacheImport")
+  private val ExportConfig = config("cacheExport")
+
+  val parser = {
+    import sbt.complete.Parser._
+    import sbt.complete.Parsers._
+
+    Space.* ~> (Space ~> token(StringBasic, "<project-label>")).?
+      .flatMap { res =>
+        (Space.+ ~> token(StringBasic, "<version-label>")).?.map(res -> _)
+      } <~ Space.*
+  }
 
 
+  private def askForStashLocation = Def.inputTask {
+    val (providedLabel, providedVersion) = parser.parsed
 
-  private def perConfigSettings = Seq(
-    doStashData := StashSetup(projectSetupFor.value, compileIncremental.value),
-    doStashApplyData := projectSetupFor.value
+    val currentGlobalLabel = providedLabel.getOrElse(defaultProjectLabel.value)
+    val currentLocalLabel = providedVersion.getOrElse(defaultVersionLabel.value)
+
+    val file = globalStashLocation.value / currentGlobalLabel / currentLocalLabel
+    file.toPath
+  }
+
+  def globalSettings = Seq(
+    defaultVersionLabel := "HEAD",
+    defaultProjectLabel := file(".").getAbsoluteFile.getParentFile.getName,
+    globalStashLocation := BuildPaths.getGlobalBase(state.value) / "sbt-stash",
+    globalCacheLocationScoped.in(ImportConfig) := {
+      val globalCache = askForStashLocation.evaluated
+      assert(Files.isDirectory(globalCache) && Files.exists(globalCache),
+        s"Cache does not exists in $globalCache (${new File(".").getAbsolutePath}!")
+      globalCache
+    },
+    globalCacheLocationScoped.in(ExportConfig) := {
+      val globalCache = askForStashLocation.evaluated
+      assert(!Files.exists(globalCache) || overrideExistingCache.value, s"Cache already exists in $globalCache!")
+      globalCache
+    }
   )
 
-  def settings =
+  def settings = {
+    def perConfigSettings = Seq(
+      doStashData := StashSetup(projectSetupFor.value, compileIncremental.value),
+      doStashApplyData := projectSetupFor.value
+    )
+
     inConfig(Compile)(perConfigSettings) ++ inConfig(Test)(perConfigSettings) ++ Seq(
       allToStash := Seq(doStashData.in(Compile).value, doStashData.in(Test).value),
       stashKey := {
@@ -61,7 +111,7 @@ object Stash extends HoarderEngine {
       aggregate.in(stashKey) := true,
       aggregate.in(stashApplyKey) := true
     )
-
+  }
 }
 
 
