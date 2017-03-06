@@ -34,7 +34,8 @@ object Stash extends HoarderEngine {
   private val doStashApplyData = TaskKey[CacheSetup]("doStashApplyData", "Hoarder internals!")
   private val allToStashApply = TaskKey[Seq[CacheSetup]]("allToStashApply", "Hoarder internals!")
   private val globalCacheLocationScoped = InputKey[Path]("cacheLocationScoped", "Hoarder internals!")
-
+  private val defaultVersionSuffix = SettingKey[String]("defaultVersionSuffix",
+    "Represents the default suffix used as the suffix to the label. E.g. _2.10")
 
   private val ImportConfig = config("cacheImport")
   private val ExportConfig = config("cacheExport")
@@ -54,13 +55,19 @@ object Stash extends HoarderEngine {
     val (providedLabel, providedVersion) = parser.parsed
 
     val currentGlobalLabel = providedLabel.getOrElse(defaultProjectLabel.value)
-    val currentLocalLabel = providedVersion.getOrElse(defaultVersionLabel.value)
+    val currentLocalLabel = providedVersion.getOrElse(
+      defaultVersionLabel.value
+    ) + defaultVersionSuffix.value
 
     val file = globalStashLocation.value / currentGlobalLabel / currentLocalLabel
     file.toPath
   }
 
   def globalSettings = Seq(
+    defaultVersionSuffix := CrossVersion
+      .partialVersion(scalaVersion.value)
+      .map("_" + _.productIterator.mkString("."))
+      .getOrElse(""),
     defaultVersionLabel := "HEAD",
     defaultProjectLabel := file(".").getAbsoluteFile.getParentFile.getName,
     globalStashLocation := BuildPaths.getGlobalBase(state.value) / "sbt-stash",
