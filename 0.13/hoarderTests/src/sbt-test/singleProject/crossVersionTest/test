@@ -1,0 +1,11 @@
+> stash
+> 'set scalaVersion:="2.12.1"'
+-> stashApply
+$ delete global/sbt-stash
+> +stash
+$ touch .cached-compilation
+> clean
+> ++stashApply
+$ touch .cached-compilation-done
+> ++testCacheImport
+-> stash

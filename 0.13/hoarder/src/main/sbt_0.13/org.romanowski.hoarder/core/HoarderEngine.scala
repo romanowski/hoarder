@@ -23,11 +23,11 @@ class HoarderEngine extends HoarderEngineCommon {
   type PreviousCompilationResult = Compiler.PreviousAnalysis
 
 
-  protected override def exportCacheTaskImpl(setup: CacheSetup,
+  protected override def exportCacheTaskImpl(cacheSetup: CacheSetup,
                                              result: CompilationResult,
                                              globalCacheLocation: Path): Unit = {
-    import setup._
-    val cacheLocation = globalCacheLocation.resolve(relativeCacheLocation)
+    import cacheSetup._
+    val cacheLocation = cacheSetup.cacheLocation(globalCacheLocation)
 
     if (Files.exists(cacheLocation)) {
       if(overrideExistingCache) IO.delete(cacheLocation.toFile)
@@ -36,7 +36,7 @@ class HoarderEngine extends HoarderEngineCommon {
 
     Files.createDirectories(cacheLocation)
 
-    val mapper = createMapper(setup)
+    val mapper = createMapper(cacheSetup)
     val fos = Files.newBufferedWriter(cacheLocation.resolve(analysisCacheFileName), Charset.forName("UTF-8"))
     try {
       new MappableFormat(mapper).write(fos, result.analysis, result.setup)
@@ -56,7 +56,7 @@ class HoarderEngine extends HoarderEngineCommon {
   protected override def importCacheTaskImpl(cacheSetup: CacheSetup,
                                              globalCacheLocation: Path): Option[PreviousCompilationResult] = {
     import cacheSetup._
-    val cacheLocation = globalCacheLocation.resolve(relativeCacheLocation)
+    val cacheLocation = cacheSetup.cacheLocation(globalCacheLocation)
 
     val from = cacheLocation.resolve(analysisCacheFileName)
     val classesZip = cacheLocation.resolve(classesZipFileName)
