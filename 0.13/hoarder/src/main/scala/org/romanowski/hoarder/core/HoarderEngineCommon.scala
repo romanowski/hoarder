@@ -29,7 +29,9 @@ trait HoarderEngineCommon {
                         relativeCacheLocation: Path,
                         overrideExistingCache: Boolean,
                         cleanOutputMode: CleanOutputMode
-                       )
+                       ){
+    def cacheLocation(root: Path) = root.resolve(relativeCacheLocation)
+  }
 
   protected def exportCacheTaskImpl(setup: CacheSetup, result: CompilationResult, globalCacheLocation: Path): Unit
 

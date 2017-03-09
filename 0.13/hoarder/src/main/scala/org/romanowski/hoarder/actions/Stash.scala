@@ -33,11 +33,7 @@ object Stash extends HoarderEngine {
   private val allToStash = TaskKey[Seq[StashSetup]]("allToStash", "Hoarder internals!")
   private val doStashApplyData = TaskKey[CacheSetup]("doStashApplyData", "Hoarder internals!")
   private val allToStashApply = TaskKey[Seq[CacheSetup]]("allToStashApply", "Hoarder internals!")
-  private val globalCacheLocationScoped = InputKey[Path]("cacheLocationScoped", "Hoarder internals!")
 
-
-  private val ImportConfig = config("cacheImport")
-  private val ExportConfig = config("cacheExport")
 
   val parser = {
     import sbt.complete.Parser._
@@ -63,18 +59,7 @@ object Stash extends HoarderEngine {
   def globalSettings = Seq(
     defaultVersionLabel := "HEAD",
     defaultProjectLabel := file(".").getAbsoluteFile.getParentFile.getName,
-    globalStashLocation := BuildPaths.getGlobalBase(state.value) / "sbt-stash",
-    globalCacheLocationScoped.in(ImportConfig) := {
-      val globalCache = askForStashLocation.evaluated
-      assert(Files.isDirectory(globalCache) && Files.exists(globalCache),
-        s"Cache does not exists in $globalCache (${new File(".").getAbsolutePath}!")
-      globalCache
-    },
-    globalCacheLocationScoped.in(ExportConfig) := {
-      val globalCache = askForStashLocation.evaluated
-      assert(!Files.exists(globalCache) || overrideExistingCache.value, s"Cache already exists in $globalCache!")
-      globalCache
-    }
+    globalStashLocation := BuildPaths.getGlobalBase(state.value) / "sbt-stash"
   )
 
   def settings = {
@@ -86,10 +71,13 @@ object Stash extends HoarderEngine {
     inConfig(Compile)(perConfigSettings) ++ inConfig(Test)(perConfigSettings) ++ Seq(
       allToStash := Seq(doStashData.in(Compile).value, doStashData.in(Test).value),
       stashKey := {
-        val globalCache = globalCacheLocationScoped.in(ExportConfig).evaluated
+        val globalCache = askForStashLocation.evaluated.resolve(scalaBinaryVersion.value)
 
         val exportedClasses = allToStash.value.map {
           case StashSetup(cache, result) =>
+            val targetCache = cache.cacheLocation(globalCache)
+            assert(!Files.exists(targetCache) || overrideExistingCache.value, s"Cache already exists in $targetCache!")
+
             exportCacheTaskImpl(cache, result, globalCache)
             cache.classesRoot
         }
@@ -98,10 +86,14 @@ object Stash extends HoarderEngine {
       },
       allToStashApply := Seq(doStashApplyData.in(Compile).value, doStashApplyData.in(Test).value),
       stashApplyKey := {
-        val globalCache = globalCacheLocationScoped.in(ImportConfig).evaluated
+        val globalCache = askForStashLocation.evaluated.resolve(scalaBinaryVersion.value)
 
         val importedClasses = allToStashApply.value.map {
           cache =>
+            val targetCache = cache.cacheLocation(globalCache)
+            assert(Files.isDirectory(targetCache) && Files.exists(targetCache),
+              s"Cache does not exists in $targetCache")
+
             importCacheTaskImpl(cache, globalCache)
             cache.classesRoot
         }
