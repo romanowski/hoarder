@@ -15,12 +15,14 @@ import sbt._
 object PluginTests {
 
   private val runTestKey = TaskKey[Unit]("")
+  private val testCacheImportKey = TaskKey[Unit]("testCacheImport")
 
   def cannotRecompile = file(".cached-compilation").exists()
+
   def canNoOp = file(".cached-compilation-done").exists()
 
   private def assertNothingRecompiled(result: Compiler.CompileResult): Compiler.CompileResult = {
-    if(cannotRecompile) {
+    if (cannotRecompile) {
       if (canNoOp) {
         if (result.hasModified) throw new RuntimeException(s"Compilation wasn't no-op in ${result.setup.output}")
       } else throw new RuntimeException(s"Compilation was triggered in ${result.setup.output}")
@@ -40,19 +42,22 @@ object PluginTests {
   }
 
   def perConfigSettings = Seq(
-    runTestKey <<= runTest,
+    runTestKey := runTest.value,
     manipulateBytecode ~= assertNothingRecompiled
   )
 
-  def testRecompilation =
-    inConfig(Compile)(perConfigSettings) ++ inConfig(Test)(perConfigSettings) ++ Seq(
-      TaskKey[Unit]("testCacheImport") := {
-        streams.value.log.success(s"Testing for ${name.value}")
-        runTestKey.in(Compile).value
-        runTestKey.in(Test).value
-      },
-      scalaVersion := "2.11.8"
-    )
+  def testRecompilation = testRecompilationIn(Compile, Test)
 
+  def testConfiguration(configuration: Configuration) =
+    inConfig(configuration)(perConfigSettings) ++
+      Seq(testCacheImportKey := {
+        testCacheImportKey.value
+        runTestKey.in(configuration).value
+      })
+
+  def testRecompilationIn(configurations: Configuration*) = Seq(
+    testCacheImportKey := streams.value.log.success(s"Testing for ${name.value}"),
+    scalaVersion := "2.11.8"
+  ) ++ configurations.flatMap(testConfiguration)
 
 }

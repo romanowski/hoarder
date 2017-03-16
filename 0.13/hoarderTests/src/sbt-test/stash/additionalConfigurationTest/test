@@ -1,0 +1,8 @@
+> test-integration:compile
+> stash
+$ touch .cached-compilation
+> clean
+> stashApply
+$ touch .cached-compilation-done
+> testCacheImport
+# TODO add incremental recompile

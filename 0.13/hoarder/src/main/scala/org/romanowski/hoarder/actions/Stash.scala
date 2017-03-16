@@ -8,7 +8,7 @@ package org.romanowski.hoarder.actions
 
 import java.nio.file.{Files, Path}
 
-import org.romanowski.HoarderCommonSettings._
+import org.romanowski.HoarderSettings._
 import org.romanowski.hoarder.core.HoarderEngine
 import sbt.Def._
 import sbt.Keys._
@@ -26,14 +26,6 @@ object Stash extends HoarderEngine {
     "Default root project label for stash/stashApply")
   val globalStashLocation = TaskKey[File]("globalStashLocation",
     "Root directory where exported artifacts are kept.")
-
-  private case class StashSetup(cacheSetup: CacheSetup, compilationResult: CompilationResult)
-
-  private val doStashData = TaskKey[StashSetup]("doStashData", "Hoarder internals!")
-  private val allToStash = TaskKey[Seq[StashSetup]]("allToStash", "Hoarder internals!")
-  private val doStashApplyData = TaskKey[CacheSetup]("doStashApplyData", "Hoarder internals!")
-  private val allToStashApply = TaskKey[Seq[CacheSetup]]("allToStashApply", "Hoarder internals!")
-
 
   val parser = {
     import sbt.complete.Parser._
@@ -63,18 +55,12 @@ object Stash extends HoarderEngine {
   )
 
   def settings = {
-    def perConfigSettings = Seq(
-      doStashData := StashSetup(projectSetupFor.value, compileIncremental.value),
-      doStashApplyData := projectSetupFor.value
-    )
-
-    inConfig(Compile)(perConfigSettings) ++ inConfig(Test)(perConfigSettings) ++ Seq(
-      allToStash := Seq(doStashData.in(Compile).value, doStashData.in(Test).value),
+    Seq(
       stashKey := {
         val globalCache = askForStashLocation.evaluated.resolve(scalaBinaryVersion.value)
 
-        val exportedClasses = allToStash.value.map {
-          case StashSetup(cache, result) =>
+        val exportedClasses = exportCacheSetups.value.map {
+          case ExportCacheSetup(cache, result) =>
             val targetCache = cache.cacheLocation(globalCache)
             assert(!Files.exists(targetCache) || overrideExistingCache.value, s"Cache already exists in $targetCache!")
 
@@ -84,11 +70,10 @@ object Stash extends HoarderEngine {
 
         streams.value.log.info(s"Project ${name.value} stashed to $globalCache using classes from $exportedClasses")
       },
-      allToStashApply := Seq(doStashApplyData.in(Compile).value, doStashApplyData.in(Test).value),
       stashApplyKey := {
         val globalCache = askForStashLocation.evaluated.resolve(scalaBinaryVersion.value)
 
-        val importedClasses = allToStashApply.value.map {
+        val importedClasses = importCacheSetups.value.map {
           cache =>
             val targetCache = cache.cacheLocation(globalCache)
             assert(Files.isDirectory(targetCache) && Files.exists(targetCache),
