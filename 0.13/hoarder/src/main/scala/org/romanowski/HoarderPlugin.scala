@@ -11,9 +11,9 @@ import sbt.{AllRequirements, AutoPlugin, PluginTrigger}
 
 
 object HoarderPlugin extends AutoPlugin {
-  import HoarderCommonSettings._
+  import HoarderSettings._
 
-  override def projectSettings = Stash.settings
+  override def projectSettings = defaultPerProject ++ Stash.settings
 
   override def globalSettings: Seq[_root_.sbt.Def.Setting[_]] = Stash.globalSettings ++ defaultsGlobal
 

@@ -8,20 +8,21 @@ package org.romanowski.hoarder.core
 
 import java.io.File
 import java.nio.charset.Charset
-import java.nio.file.{Files, Path}
+import java.nio.file.Files
+import java.nio.file.Path
 
-import sbt.compiler.{IC, MixedAnalyzingCompiler}
+import org.romanowski.HoarderSettings.CacheSetup
+import org.romanowski.hoarder.core.SbtTypes.CompilationResult
+import org.romanowski.hoarder.core.SbtTypes.PreviousCompilationResult
+import sbt.compiler.MixedAnalyzingCompiler
 import sbt.inc.MappableFormat
 import sbt.internal.inc.AnalysisMappers
-import sbt.{PathFinder, _}
+import sbt.PathFinder
+import sbt._
 import xsbti.compile.SingleOutput
 
 
 class HoarderEngine extends HoarderEngineCommon {
-
-  type CompilationResult = IC.Result
-  type PreviousCompilationResult = Compiler.PreviousAnalysis
-
 
   protected override def exportCacheTaskImpl(cacheSetup: CacheSetup,
                                              result: CompilationResult,
@@ -30,7 +31,7 @@ class HoarderEngine extends HoarderEngineCommon {
     val cacheLocation = cacheSetup.cacheLocation(globalCacheLocation)
 
     if (Files.exists(cacheLocation)) {
-      if(overrideExistingCache) IO.delete(cacheLocation.toFile)
+      if (overrideExistingCache) IO.delete(cacheLocation.toFile)
       else new IllegalArgumentException(s"Cache already exists at $cacheLocation.")
     }
 
