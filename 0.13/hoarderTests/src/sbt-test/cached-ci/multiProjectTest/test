@@ -1,0 +1,47 @@
+# export=false use=false
+> postBuild
+$ touch .cached-compilation
+> preBuild
+$ touch .cached-compilation-done
+-> testCacheImport
+$ absent .hoarder-cache/multiprojecttest
+$ delete .cached-compilation-done
+$ delete .cached-compilation
+> clean
+
+# export=true use=false
+$ touch .shouldPublishCaches
+> postBuild
+$ exists .hoarder-cache/multiprojecttest
+$ touch .cached-compilation
+> preBuild
+$ touch .cached-compilation-done
+-> testCacheImport
+> clean
+
+# export=true use=true
+$ touch .shouldUseCache
+> preBuild
+> testCacheImport
+> clean
+
+# export=false use=true
+$ delete .shouldPublishCaches
+> postBuild
+$ exists .hoarder-cache/multiprojecttest
+> preBuild
+> testCacheImport
+
+
+# export=true use=true
+$ delete .cached-compilation
+$ delete .cached-compilation-done
+$ touch .shouldPublishCaches
+$ delete .hoarder-cache
+> clean
+> finalProject/postBuild
+$ exists .hoarder-cache/baseProject
+$ touch .cached-compilation
+> finalProject/preBuild
+$ touch .cached-compilation-done
+> testCacheImport

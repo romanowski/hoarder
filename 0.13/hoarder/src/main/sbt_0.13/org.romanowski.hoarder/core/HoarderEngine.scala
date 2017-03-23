@@ -14,11 +14,11 @@ import java.nio.file.Path
 import org.romanowski.HoarderSettings.CacheSetup
 import org.romanowski.hoarder.core.SbtTypes.CompilationResult
 import org.romanowski.hoarder.core.SbtTypes.PreviousCompilationResult
+import sbt.PathFinder
+import sbt._
 import sbt.compiler.MixedAnalyzingCompiler
 import sbt.inc.MappableFormat
 import sbt.internal.inc.AnalysisMappers
-import sbt.PathFinder
-import sbt._
 import xsbti.compile.SingleOutput
 
 
@@ -26,9 +26,10 @@ class HoarderEngine extends HoarderEngineCommon {
 
   protected override def exportCacheTaskImpl(cacheSetup: CacheSetup,
                                              result: CompilationResult,
-                                             globalCacheLocation: Path): Unit = {
+                                             globalCacheLocation: Path): Path = {
     import cacheSetup._
     val cacheLocation = cacheSetup.cacheLocation(globalCacheLocation)
+    assert(!Files.exists(cacheLocation) || overrideExistingCache, s"Cache already exists in $cacheLocation!")
 
     if (Files.exists(cacheLocation)) {
       if (overrideExistingCache) IO.delete(cacheLocation.toFile)
@@ -52,12 +53,14 @@ class HoarderEngine extends HoarderEngineCommon {
     }
 
     IO.zip(classesToZip, cacheLocation.resolve(classesZipFileName).toFile)
+    cacheLocation
   }
 
   protected override def importCacheTaskImpl(cacheSetup: CacheSetup,
                                              globalCacheLocation: Path): Option[PreviousCompilationResult] = {
     import cacheSetup._
     val cacheLocation = cacheSetup.cacheLocation(globalCacheLocation)
+    assert(Files.isDirectory(cacheLocation) && Files.exists(cacheLocation), s"Cache does not exists in $cacheLocation")
 
     val from = cacheLocation.resolve(analysisCacheFileName)
     val classesZip = cacheLocation.resolve(classesZipFileName)

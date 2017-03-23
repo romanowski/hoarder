@@ -6,8 +6,6 @@
 
 package org.romanowski.hoarder.actions
 
-import java.nio.file.{Files, Path}
-
 import org.romanowski.HoarderSettings._
 import org.romanowski.hoarder.core.HoarderEngine
 import sbt.Def._
@@ -59,28 +57,16 @@ object Stash extends HoarderEngine {
       stashKey := {
         val globalCache = askForStashLocation.evaluated.resolve(scalaBinaryVersion.value)
 
-        val exportedClasses = exportCacheSetups.value.map {
-          case ExportCacheSetup(cache, result) =>
-            val targetCache = cache.cacheLocation(globalCache)
-            assert(!Files.exists(targetCache) || overrideExistingCache.value, s"Cache already exists in $targetCache!")
-
-            exportCacheTaskImpl(cache, result, globalCache)
-            cache.classesRoot
-        }
+        val exportedClasses = exportCacheSetups.value.map(exportCacheTaskImpl(globalCache))
 
         streams.value.log.info(s"Project ${name.value} stashed to $globalCache using classes from $exportedClasses")
       },
       stashApplyKey := {
         val globalCache = askForStashLocation.evaluated.resolve(scalaBinaryVersion.value)
 
-        val importedClasses = importCacheSetups.value.map {
-          cache =>
-            val targetCache = cache.cacheLocation(globalCache)
-            assert(Files.isDirectory(targetCache) && Files.exists(targetCache),
-              s"Cache does not exists in $targetCache")
-
-            importCacheTaskImpl(cache, globalCache)
-            cache.classesRoot
+        val importedClasses = importCacheSetups.value.map { cache =>
+          importCacheTaskImpl(cache, globalCache)
+          cache.classesRoot
         }
 
         streams.value.log.info(s"Stash for ${name.value} applied from $globalCache to $importedClasses")
