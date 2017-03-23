@@ -1,0 +1,5 @@
+> "stash foo bar"
+-> "stash foo bar"
+> "stashClean foo bar"
+-> "stashApply foo bar"
+> "stash foo bar"
