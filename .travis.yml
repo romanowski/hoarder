@@ -15,8 +15,13 @@ script:
   - sbt test
   - sbt scripted
   - sbt "set version.in(hoarder) :=\"1.0-for-test\"" hoarder/publishLocal
+  - git clone -b hoarder-integration-test https://github.com/romanowski/ensime-server.git ciIntegrationTest_tmp
+  - mkdir -p ciIntegrationTest
+  - mv ciIntegrationTest_tmp/* ciIntegrationTest
   - cd ciIntegrationTest
-  - sbt preBuild test:compile postBuild
+  - sbt preBuild
+  - sbt test:compile
+  - sbt postBuild
 # Uncomment below after new release of sbt
 #  - cd ../1.0
 #  - sbt test
