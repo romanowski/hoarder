@@ -3,10 +3,20 @@ language: scala
 scala:
   - 2.11.8
 
+cache:
+  directories:
+  - 0.13/ciIntegrationTest/.hoarder-cache
+  # Uncomment below after new release of sbt
+  #- 1.0/integrationTest/.hoarder-cache
+
+
 script:
   - cd 0.13
   - sbt test
   - sbt scripted
+  - sbt "set version.in(hoarder) :=\"1.0-for-test\"" hoarder/publishLocal
+  - cd ciIntegrationTest
+  - sbt preBuild test:compile postBuild
 # Uncomment below after new release of sbt
 #  - cd ../1.0
 #  - sbt test
