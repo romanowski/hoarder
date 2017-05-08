@@ -7,7 +7,9 @@
 package org.romanowski.hoarder.core
 
 import java.io.File
+import java.lang.management.ManagementFactory
 import java.nio.file.Path
+import java.nio.file.Paths
 
 import sbt.Attributed
 import sbt.Keys._
@@ -38,16 +40,33 @@ class SbtAnalysisMapper(sbtOutput: Path,
 			if (includeSize) from.data.length() else -1
 		).mkString("#")
 
+	def asJVMJar(filePath: Path): Option[String] = for {
+		javaHome <- Option(System.getProperty("java.home"))
+		javaHomePath = Paths.get(javaHome)
+		if filePath.startsWith(javaHomePath)
+		javaVersion <- Option(System.getProperty("java.specification.version"))
+		relativePath = javaHomePath.relativize(filePath)
+	} yield s"##$javaVersion##$relativePath"
+
 	def writeDescriptor(f: File): String = {
 		classpath.find(_.data == f).flatMap(stringifyAttributes)
+			.orElse(asJVMJar(f.toPath))
 			.getOrElse(
 				if (f.toPath.startsWith(projectRoot)) s"$header${projectRoot.relativize(f.toPath).toString}"
 				else FormatCommons.fileToString(f)
 			)
 	}
 
+	lazy val jvmClasspath: Map[String, File] = if(ManagementFactory.getRuntimeMXBean.isBootClassPathSupported)
+		ManagementFactory.getRuntimeMXBean.getBootClassPath.split(File.pathSeparator).flatMap { s =>
+			val path = Paths.get(s)
+			val jvmJar = asJVMJar(path)
+			jvmJar.map( _ -> path.toFile)
+		}(collection.breakOut)
+		else Map.empty
+
 	lazy val classpathDescriptors: Map[String, File] =
-		classpath.map(stringifyAttributes).zip(classpath).collect {
+		jvmClasspath ++ classpath.map(stringifyAttributes).zip(classpath).collect {
 			case (Some(k), attributted) => k -> attributted.data
 		}(collection.breakOut)
 

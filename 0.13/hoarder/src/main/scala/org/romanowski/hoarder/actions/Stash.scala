@@ -17,7 +17,9 @@ object Stash extends HoarderEngine {
   val stashKey = InputKey[Unit]("stash",
     "Export results of current compilation to global location.")
   val stashApplyKey = InputKey[Unit]("stashApply",
-    "Load exported copilation results from global location.")
+    "Load exported compilation results from global location.")
+  val stashCleanKey = InputKey[Unit]("stashClean",
+    "Clean exported compilation results from global location.")
   val defaultVersionLabel = SettingKey[String]("defaultVersionLabel",
     "Default version label for stash/stashApply")
   val defaultProjectLabel = SettingKey[String]("defaultProjectLabel",
@@ -49,7 +51,8 @@ object Stash extends HoarderEngine {
   def globalSettings = Seq(
     defaultVersionLabel := "HEAD",
     defaultProjectLabel := file(".").getAbsoluteFile.getParentFile.getName,
-    globalStashLocation := BuildPaths.getGlobalBase(state.value) / "sbt-stash"
+    globalStashLocation := BuildPaths.getGlobalBase(state.value) / "sbt-stash",
+    stashCleanKey := IO.delete(askForStashLocation.evaluated.toFile)
   )
 
   def settings = {
