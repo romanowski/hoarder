@@ -6,28 +6,16 @@
 
 package org.romanowski.hoarder.actions
 
-import org.romanowski.HoarderSettings._
+import org.romanowski.HoarderPlugin.autoImport._
 import org.romanowski.hoarder.core.HoarderEngine
 import sbt.Def._
 import sbt.Keys._
 import sbt._
 
+
 object Stash extends HoarderEngine {
 
-  val stashKey = InputKey[Unit]("stash",
-    "Export results of current compilation to global location.")
-  val stashApplyKey = InputKey[Unit]("stashApply",
-    "Load exported compilation results from global location.")
-  val stashCleanKey = InputKey[Unit]("stashClean",
-    "Clean exported compilation results from global location.")
-  val defaultVersionLabel = SettingKey[String]("defaultVersionLabel",
-    "Default version label for stash/stashApply")
-  val defaultProjectLabel = SettingKey[String]("defaultProjectLabel",
-    "Default root project label for stash/stashApply")
-  val globalStashLocation = TaskKey[File]("globalStashLocation",
-    "Root directory where exported artifacts are kept.")
-
-  val parser = {
+  private [romanowski] val parser = {
     import sbt.complete.Parser._
     import sbt.complete.Parsers._
 
@@ -36,7 +24,6 @@ object Stash extends HoarderEngine {
         (Space.+ ~> token(StringBasic, "<version-label>")).?.map(res -> _)
       } <~ Space.*
   }
-
 
   private def askForStashLocation = Def.inputTask {
     val (providedLabel, providedVersion) = parser.parsed

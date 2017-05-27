@@ -4,6 +4,6 @@ configs(TestIntegration)
 
 inConfig(TestIntegration)(Defaults.configSettings)
 
-org.romanowski.HoarderSettings.includeConfiguration(TestIntegration)
+includeConfiguration(TestIntegration)
 
-org.romanowski.hoarder.tests.PluginTests.testRecompilationIn(Test, Compile, TestIntegration)
+testRecompilationIn(Test, Compile, TestIntegration)

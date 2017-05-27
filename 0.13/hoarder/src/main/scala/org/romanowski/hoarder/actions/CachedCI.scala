@@ -9,7 +9,7 @@ package org.romanowski.hoarder.actions
 import java.nio.file.Path
 
 import org.romanowski.HoarderPlugin
-import org.romanowski.HoarderSettings._
+import org.romanowski.HoarderPlugin.autoImport._
 import org.romanowski.hoarder.core.HoarderEngine
 import sbt.Def._
 import sbt.Keys._
@@ -43,13 +43,8 @@ object CachedCI extends HoarderEngine {
     def loadCache(op: Path => Unit): Unit
   }
 
-  val preBuild = TaskKey[Unit]("preBuild", "TODO")
-  val postBuild = TaskKey[Unit]("postBuild", "TODO")
-
-  val currentSetup = SettingKey[Setup]("currentSetup", "TODO")
-
-  private val doImportCiCaches = TaskKey[Unit]("private:doImportCiCaches", "TODO")
-  private val doExportCiCaches = TaskKey[Unit]("private:doExportCiCaches", "TODO")
+  private val doImportCiCaches = HoarderPlugin.internalTask[Unit]("doImportCiCaches")
+  private val doExportCiCaches = HoarderPlugin.internalTask[Unit]("doExportCiCaches")
 
 
   def projectSettings = Seq(

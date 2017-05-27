@@ -20,5 +20,5 @@ $ delete .cached-compilation
 $ delete .cached-compilation-done
 -> "stash p1 v1"
 > "stash p1 v2"
-> "set org.romanowski.HoarderSettings.overrideExistingCache.in(Global) := true"
+> "set overrideExistingCache.in(Global) := true"
 > "stash p1 v1"
