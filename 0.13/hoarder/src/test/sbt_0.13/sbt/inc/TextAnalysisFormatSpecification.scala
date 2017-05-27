@@ -1,12 +1,16 @@
 package sbt.inc
 
-import sbt.{CompileOptions, CompileSetup}
+import java.io.BufferedReader
+import java.io.File
+import java.io.StringReader
+import java.io.StringWriter
+
+import org.scalacheck.Prop._
+import org.scalacheck._
+import sbt.CompileOptions
+import sbt.CompileSetup
 import xsbti.Problem
 import xsbti.compile._
-import java.io.{ BufferedReader, File, StringReader, StringWriter }
-
-import org.scalacheck._
-import Prop._
 
 object DefaultFormatTest extends Properties("TextAnalysisFormat") with BaseTextAnalysisFormatTest {
   override def format = DefaultFormat
@@ -22,6 +26,7 @@ object DefaultFormatFromTextFormatTest extends Properties("TextAnalysisFormat") 
     writer.toString
   }
 }
+
 object TextFormatFromDefaultFormatTest extends Properties("TextAnalysisFormat") with BaseTextAnalysisFormatTest {
   override def format = DefaultFormat
 
@@ -58,7 +63,9 @@ trait BaseTextAnalysisFormatTest {
 
   val nameHashing = true
   val storeApis = true
-  val dummyOutput = new xsbti.compile.SingleOutput { def outputDirectory: java.io.File = new java.io.File("/dummy") }
+  val dummyOutput = new xsbti.compile.SingleOutput {
+    def outputDirectory: java.io.File = new java.io.File("/dummy")
+  }
   val commonSetup = new CompileSetup(dummyOutput, new CompileOptions(Nil, Nil),
     "2.10.4", xsbti.compile.CompileOrder.Mixed, nameHashing)
 
@@ -165,7 +172,7 @@ trait BaseTextAnalysisFormatTest {
     ("OUTPUT EQUAL" |: compareOutputs(left.output, right.output)) &&
       ("JAVA OPTIONS EQUAL" |: left.options.javacOptions.toVector =? right.options.javacOptions.toVector) &&
       ("SCALA OPTIONS EQUAL" |: left.options.options.toVector =? right.options.options.toVector) &&
-    ("COMPILER VERSION EQUAL" |: left.compilerVersion == right.compilerVersion) &&
+      ("COMPILER VERSION EQUAL" |: left.compilerVersion == right.compilerVersion) &&
       ("COMPILE ORDER EQUAL" |: left.order =? right.order) &&
       ("NAMEHASHING EQUAL" |: left.nameHashing =? right.nameHashing)
   }

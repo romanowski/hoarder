@@ -1,6 +1,9 @@
 package sbt.inc
 
-import java.io.{BufferedReader, File, Writer}
+import java.io.BufferedReader
+import java.io.File
+import java.io.Writer
+
 import sbt.Relation
 import sbt.internal.inc._
 
@@ -9,12 +12,12 @@ trait RelationsTextFormat extends FormatCommons {
   def mappers: AnalysisMappers
 
   private case class Descriptor[B](
-                                       header: String,
-                                       selectCorresponding: Relations => Relation[File, B],
-                                       keyMapper: Mapper[File],
-                                       valueMapper: Mapper[B],
-                                       enabled: Boolean = true
-                                     )
+                                    header: String,
+                                    selectCorresponding: Relations => Relation[File, B],
+                                    keyMapper: Mapper[File],
+                                    valueMapper: Mapper[B],
+                                    enabled: Boolean = true
+                                  )
 
 
   private def namesFromRelation(r: Relations): Relation[File, String] =
@@ -52,7 +55,7 @@ trait RelationsTextFormat extends FormatCommons {
         }
 
         val header = relDesc.header
-        val rel: Relation[File, B] = if(relDesc.enabled) relDesc.selectCorresponding(relations) else Relation.empty[File, B]
+        val rel: Relation[File, B] = if (relDesc.enabled) relDesc.selectCorresponding(relations) else Relation.empty[File, B]
 
         writeHeader(out, header)
         writeSize(out, rel.size)
@@ -98,4 +101,5 @@ trait RelationsTextFormat extends FormatCommons {
       Relations.construct(nameHashing, relations)
     }
   }
+
 }

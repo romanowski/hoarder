@@ -68,7 +68,8 @@ object CachedCI extends HoarderEngine {
       if (setup.shouldUseCache()) Def.task(setup.loadCache { path =>
         aggregatedTask(doImportCiCaches).value
         streams.value.log.info(s"Cache imported from $path")
-      }) else Def.task(streams.value.log.info(s"Cache won't be used."))
+      })
+      else Def.task(streams.value.log.info(s"Cache won't be used."))
     }.value,
     postBuild := Def.taskDyn {
       val setup = currentSetup.value
@@ -84,8 +85,8 @@ object CachedCI extends HoarderEngine {
     aggregate.in(postBuild) := false
   )
 
-  private def aggregatedTask(key: TaskKey[_]) = Def.task{
-    state.map{
+  private def aggregatedTask(key: TaskKey[_]) = Def.task {
+    state.map {
       state =>
         val extracted = Project.extract(state)
         extracted.runAggregated(key.in(extracted.currentRef), state)

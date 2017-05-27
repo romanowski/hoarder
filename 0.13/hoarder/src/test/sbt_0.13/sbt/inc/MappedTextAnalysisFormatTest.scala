@@ -2,12 +2,15 @@ package sbt.inc
 
 import java.io.File
 
-import org.scalacheck.{ Prop, Properties }
+import org.scalacheck.Prop
+import org.scalacheck.Properties
 import sbt.internal.inc._
 
-import scala.util.{ Random, Try }
+import scala.util.Random
+import scala.util.Try
 
 object MappedTextAnalysisFormatTest extends Properties("MappedTextAnalysisFormat") with BaseTextAnalysisFormatTest {
+
   object TestMapper extends AnalysisMappers {
     override val sourceMapper: Mapper[File] = mapped(Mapper.forFile)
     override val productMapper: Mapper[File] = mapped(Mapper.forFile)
@@ -24,7 +27,7 @@ object MappedTextAnalysisFormatTest extends Properties("MappedTextAnalysisFormat
         case Regexp(HEADER, original) => original
         case Regexp(badHeader, original) =>
           throw new RuntimeException(s"Headers don't match expected: '$HEADER' got '$badHeader'")
-        case Regexp(list @ _*) =>
+        case Regexp(list@_*) =>
           throw new RuntimeException(s"Value '$v' cannot be used. Matched: $list")
         case _ =>
           throw new RuntimeException(s"Value '$v' cannot be used. Does not match ${Regexp.pattern.pattern()}")

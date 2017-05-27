@@ -15,7 +15,7 @@ import sbt._
 
 object Stash extends HoarderEngine {
 
-  private [romanowski] val parser = {
+  private[romanowski] val parser = {
     import sbt.complete.Parser._
     import sbt.complete.Parsers._
 

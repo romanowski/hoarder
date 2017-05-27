@@ -1,13 +1,14 @@
 package sbt.internal.inc
 
 import java.io.File
-import java.nio.file.{Path, Paths}
+import java.nio.file.Path
 
 import sbt.inc.Stamp
 
 import scala.util.Try
 
 case class Mapper[V](read: String => V, write: V => String)
+
 case class ContextAwareMapper[C, V](read: (C, String) => V, write: (C, V) => String)
 
 object Mapper {
@@ -18,38 +19,39 @@ object Mapper {
   val forStamp: ContextAwareMapper[File, Stamp] = ContextAwareMapper((_, v) => Stamp.fromString(v), (_, s) => s.toString)
 
   def staticFile(value: File) = {
-    def read(v: String): File = if(v == header) value else FormatCommons.stringToFile(v)
-    def write(f: File): String = if(f == value) header else FormatCommons.fileToString(f)
+    def read(v: String): File = if (v == header) value else FormatCommons.stringToFile(v)
+    def write(f: File): String = if (f == value) header else FormatCommons.fileToString(f)
 
     Mapper(read, write)
   }
+
   private val Regexp = s"#(\\d+)#(.+)".r
 
   def multipleRoots(roots: Seq[Path], default: Path) = {
-      def write(f: File): String = {
-        val path = f.toPath
-        val header = roots.zipWithIndex.collectFirst {
-          case (root, nr) if path.startsWith(root) =>
-            s"#$nr#${root.relativize(path)}"
-        }
-        header.getOrElse {
-          if(path.startsWith(default)) s"$header${default.relativize(path)}"
-          else FormatCommons.fileToString(f)
-        }
+    def write(f: File): String = {
+      val path = f.toPath
+      val header = roots.zipWithIndex.collectFirst {
+        case (root, nr) if path.startsWith(root) =>
+          s"#$nr#${root.relativize(path)}"
       }
-
-      def read(s: String): File = s match {
-        case Regexp(nr, path) if nr.toInt < roots.size =>
-          roots(nr.toInt).resolve(path).toFile
-        case Regexp(_, path) =>
-          default.resolve(path).toFile
-        case path if s.startsWith(header) =>
-          default.resolve(path.drop(header.size)).toFile
-        case _ => FormatCommons.stringToFile(s)
+      header.getOrElse {
+        if (path.startsWith(default)) s"$header${default.relativize(path)}"
+        else FormatCommons.fileToString(f)
       }
-
-      Mapper(read, write)
     }
+
+    def read(s: String): File = s match {
+      case Regexp(nr, path) if nr.toInt < roots.size =>
+        roots(nr.toInt).resolve(path).toFile
+      case Regexp(_, path) =>
+        default.resolve(path).toFile
+      case path if s.startsWith(header) =>
+        default.resolve(path.drop(header.size)).toFile
+      case _ => FormatCommons.stringToFile(s)
+    }
+
+    Mapper(read, write)
+  }
 
   implicit class MapperOpts[V](mapper: Mapper[V]) {
     def map[T](map: V => T, unmap: T => V) = Mapper[T](mapper.read.andThen(map), unmap.andThen(mapper.write))
@@ -58,7 +60,7 @@ object Mapper {
   def rebaseFile(from: Path, to: Path): Mapper[File] = {
     def rebaseFile(from: Path, to: Path): File => File =
       f =>
-        Try { to.resolve(from.relativize(f.toPath)).toFile }.getOrElse(f)
+        Try(to.resolve(from.relativize(f.toPath)).toFile).getOrElse(f)
 
     forFile.map(rebaseFile(from, to), rebaseFile(to, from))
   }
