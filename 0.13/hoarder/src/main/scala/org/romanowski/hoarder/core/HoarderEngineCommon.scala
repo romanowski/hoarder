@@ -14,6 +14,7 @@ import org.romanowski.hoarder.core.SbtTypes.PreviousCompilationResult
 
 trait HoarderEngineCommon {
   val analysisCacheFileName = "analysis.txt"
+  val analysisCacheZipFileName = "analysis.zip"
   val classesZipFileName = "classes.zip"
 
   protected def exportCacheTaskImpl(setup: CacheSetup, result: CompilationResult, globalCacheLocation: Path): Path

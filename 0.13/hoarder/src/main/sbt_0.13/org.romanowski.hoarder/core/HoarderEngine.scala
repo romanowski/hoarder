@@ -7,9 +7,12 @@
 package org.romanowski.hoarder.core
 
 import java.io.File
+import java.net.URI
 import java.nio.charset.Charset
+import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util
 
 import org.romanowski.HoarderSettings.CacheSetup
 import org.romanowski.hoarder.core.SbtTypes.CompilationResult
@@ -23,6 +26,18 @@ import xsbti.compile.SingleOutput
 
 
 class HoarderEngine extends HoarderEngineCommon {
+
+  val charset = Charset.forName("UTF-8")
+
+  private def analysisPathFromZip(zipPath: Path, create: Boolean = false) = {
+    val uri = URI.create(s"jar:file:${zipPath.toAbsolutePath}")
+    val env = new util.HashMap[String, String]()
+
+    if (create) env.put("create", "true")
+    FileSystems
+      .newFileSystem(uri, env, null)
+      .getPath("/", analysisCacheFileName)
+  }
 
   protected override def exportCacheTaskImpl(cacheSetup: CacheSetup,
                                              result: CompilationResult,
@@ -39,12 +54,21 @@ class HoarderEngine extends HoarderEngineCommon {
     Files.createDirectories(cacheLocation)
 
     val mapper = createMapper(cacheSetup)
-    val fos = Files.newBufferedWriter(cacheLocation.resolve(analysisCacheFileName), Charset.forName("UTF-8"))
+
+    val exportedAnalysisPath = if (cacheSetup.zipAnalysisFile)
+      analysisPathFromZip(cacheLocation.resolve(analysisCacheZipFileName), create = true)
+    else
+      cacheLocation.resolve(analysisCacheFileName)
+
+    val fos = Files.newBufferedWriter(exportedAnalysisPath, charset)
     try {
       new MappableFormat(mapper).write(fos, result.analysis, result.setup)
-    } finally fos.close()
+    } finally {
+      fos.close()
+      if (cacheSetup.zipAnalysisFile) exportedAnalysisPath.getFileSystem.close()
+    }
 
-    val outputPath = ouputForProject(result.setup).toPath
+    val outputPath = outputForProject(result.setup).toPath
 
     val classes = (PathFinder(classesRoot.toFile) ** "*.class").get
     val classesToZip = classes.map { classFile =>
@@ -56,47 +80,54 @@ class HoarderEngine extends HoarderEngineCommon {
     cacheLocation
   }
 
+  private def zipAnalysis(cacheLocation: Path): Option[Path] = {
+    val zipPath = cacheLocation.resolve(analysisCacheZipFileName)
+    if (Files.exists(zipPath)) Option(analysisPathFromZip(zipPath)) else None
+  }
+
   protected override def importCacheTaskImpl(cacheSetup: CacheSetup,
                                              globalCacheLocation: Path): Option[PreviousCompilationResult] = {
     import cacheSetup._
     val cacheLocation = cacheSetup.cacheLocation(globalCacheLocation)
     assert(Files.isDirectory(cacheLocation) && Files.exists(cacheLocation), s"Cache does not exists in $cacheLocation")
 
-    val from = cacheLocation.resolve(analysisCacheFileName)
-    val classesZip = cacheLocation.resolve(classesZipFileName)
     val mapper = createMapper(cacheSetup)
     val outputDir = classesRoot.toFile
 
-    if (Files.exists(from) && Files.exists(classesZip)) {
 
-      if (outputDir.exists()) {
-        if (outputDir.isDirectory) {
-          cleanOutputMode match {
-            case CleanOutput =>
-              if (outputDir.list().nonEmpty) IO.delete(outputDir)
-            case FailOnNonEmpty =>
-              if (outputDir.list().nonEmpty)
-                throw new IllegalStateException(s"Output directory: $outputDir is not empty and cleanOutput is false")
-            case CleanClasses =>
-              val classFiles = PathFinder(outputDir) ** "*.class"
-              IO.delete(classFiles.get)
-          }
-        } else throw new IllegalStateException(s"Output file: $outputDir is not a directory")
-      }
+    val zippedAnalysis = zipAnalysis(cacheLocation)
+    try {
+      val analysisPath = zippedAnalysis getOrElse cacheLocation.resolve(analysisCacheFileName)
+      val classesZip = cacheLocation.resolve(classesZipFileName)
+      if (Files.exists(classesZip) && Files.exists(analysisPath)) {
+        if (outputDir.exists()) {
+          if (outputDir.isDirectory) {
+            cleanOutputMode match {
+              case CleanOutput =>
+                if (outputDir.list().nonEmpty) IO.delete(outputDir)
+              case FailOnNonEmpty =>
+                if (outputDir.list().nonEmpty)
+                  throw new IllegalStateException(s"Output directory: $outputDir is not empty and cleanOutput is false")
+              case CleanClasses =>
+                val classFiles = PathFinder(outputDir) ** "*.class"
+                IO.delete(classFiles.get)
+            }
+          } else throw new IllegalStateException(s"Output file: $outputDir is not a directory")
+        }
 
-      IO.unzip(classesZip.toFile, outputDir, preserveLastModified = true)
+        IO.unzip(classesZip.toFile, outputDir, preserveLastModified = true)
 
-      val ios = Files.newBufferedReader(from, Charset.forName("UTF-8"))
+        val analysisReader = Files.newBufferedReader(analysisPath, charset)
+        val (analysis, setup) = try {
+          new MappableFormat(mapper).read(analysisReader)
+        } finally analysisReader.close()
 
-      val (analysis, setup) = try {
-        new MappableFormat(mapper).read(ios)
-      } finally ios.close()
+        val store = MixedAnalyzingCompiler.staticCachedStore(analysisFile)
+        store.set(analysis, setup)
 
-      val store = MixedAnalyzingCompiler.staticCachedStore(analysisFile)
-      store.set(analysis, setup)
-
-      Some(Compiler.PreviousAnalysis(analysis, Some(setup)))
-    } else None
+        Option(Compiler.PreviousAnalysis(analysis, Some(setup)))
+      } else None
+    } finally zippedAnalysis.foreach(_.getFileSystem.close())
   }
 
   private def createMapper(projectSetup: CacheSetup): AnalysisMappers = {
@@ -104,7 +135,7 @@ class HoarderEngine extends HoarderEngineCommon {
     new SbtAnalysisMapper(classesRoot, sourceRoots.map(_.toPath), projectRoot, classpath)
   }
 
-  private def ouputForProject(setup: CompileSetup): File = setup.output match {
+  private def outputForProject(setup: CompileSetup): File = setup.output match {
     case s: SingleOutput =>
       s.outputDirectory()
     case _ =>
