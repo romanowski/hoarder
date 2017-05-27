@@ -7,8 +7,6 @@
 package org.romanowski
 package hoarder.tests
 
-import java.nio.file.Path
-
 import sbt.Keys._
 import sbt._
 
@@ -46,7 +44,7 @@ object PluginTests {
     manipulateBytecode ~= assertNothingRecompiled
   )
 
-  def testRecompilation = testRecompilationIn(Compile, Test)
+  def testRecompilation = testRecompilationIn(Compile, Test) ++ Seq(changeLineEndings)
 
   def testConfiguration(configuration: Configuration) =
     inConfig(configuration)(perConfigSettings) ++
@@ -59,5 +57,29 @@ object PluginTests {
     testCacheImportKey := streams.value.log.success(s"Testing for ${name.value}"),
     scalaVersion := "2.11.8"
   ) ++ configurations.flatMap(testConfiguration)
+
+  private def changeLineEndingsForFile(content: String): String = {
+    val fileLines = content.linesIterator.toSeq
+
+    val Linux = fileLines.mkString("\n")
+    val Windows = fileLines.mkString("\r\n")
+    val Macos = fileLines.mkString("\r")
+
+    content match {
+      case Linux => Windows
+      case Windows => Macos
+      case Macos => Linux
+    }
+  }
+
+  def changeLineEndings = TaskKey[Unit]("changeLineEndings") := {
+    (file(".") ** "*.scala").get.foreach {
+      file =>
+        val content = IO.read(file)
+        val changed = changeLineEndingsForFile(content)
+        println(s"$file (before):\n$content\n(after):\n$changed ")
+        IO.write(file, changed)
+    }
+  }
 
 }
