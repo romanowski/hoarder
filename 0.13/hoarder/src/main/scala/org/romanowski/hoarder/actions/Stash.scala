@@ -6,7 +6,7 @@
 
 package org.romanowski.hoarder.actions
 
-import org.romanowski.HoarderPlugin.autoImport._
+import org.romanowski.HoarderKeys._
 import org.romanowski.hoarder.core.HoarderEngine
 import sbt.Def._
 import sbt.Keys._

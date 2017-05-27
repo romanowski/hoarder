@@ -19,39 +19,10 @@ import sbt.Keys._
 import sbt._
 
 
-object HoarderPlugin extends AutoPlugin {
-
-  override def projectSettings = defaultPerProject ++ Stash.settings
-
-  override def globalSettings: Seq[_root_.sbt.Def.Setting[_]] = Stash.globalSettings ++ defaultsGlobal
-
-  override def trigger: PluginTrigger = AllRequirements
-
+object HoarderKeys extends StashKeys with CachedCiKeys {
   private[romanowski] def internalTask[T: Manifest](name: String) =
     TaskKey[T](s"hoarder:internal:$name", s"Internal hoarder task: $name. Please do not use.")
 
-  object autoImport extends StashKeys with CachedCiKeys {
-    val cleanOutputMode = SettingKey[CleanOutputMode]("hoarder:cleanOutputMode", "What should be cleaned prior to cache extraction")
-    val zipHoarderAnalysisCache = SettingKey[Boolean]("hoarder:zipAnalysisFile", "Determines if analysis file will be zipped or not")
-    val overrideExistingCache = SettingKey[Boolean]("hoarder:overrideExistingCache", "Override existing stash")
-
-    def includeConfiguration(config: Configuration) = {
-      inConfig(config)(Seq(
-        perConfigurationSetup := projectSetupFor.value,
-        perConfigurationExportSetup := ExportCacheSetup(perConfigurationSetup.value, compileIncremental.value)
-      )) ++ Seq(
-        importCacheSetups += perConfigurationSetup.in(config).value,
-        exportCacheSetups += perConfigurationExportSetup.in(config).value
-      )
-    }
-
-    private[romanowski] val importCacheSetups = internalTask[Seq[CacheSetup]]("importCacheSetups")
-    private[romanowski] val exportCacheSetups = internalTask[Seq[ExportCacheSetup]]("exportCacheSetups")
-    private[romanowski] val perConfigurationSetup = internalTask[CacheSetup]("perConfigurationSetup")
-    private[romanowski] val perConfigurationExportSetup = internalTask[ExportCacheSetup]("perConfigurationExportSetup")
-  }
-
-  import autoImport._
 
   case class CacheSetup(sourceRoots: Seq[File],
                         classpath: Classpath,
@@ -68,6 +39,43 @@ object HoarderPlugin extends AutoPlugin {
 
   case class ExportCacheSetup(cacheSetup: CacheSetup, compilationResult: CompilationResult)
 
+  val cleanOutputMode = SettingKey[CleanOutputMode]("hoarder:cleanOutputMode", "What should be cleaned prior to cache extraction")
+  val zipAnalysisCache = SettingKey[Boolean]("hoarder:zipAnalysisFile", "Determines if analysis file will be zipped or not")
+  val overrideExistingCache = SettingKey[Boolean]("hoarder:overrideExistingCache", "Override existing stash")
+
+  def withConfiguration(config: Configuration): Seq[Setting[_]] = HoarderPlugin.includeConfiguration(config)
+
+  private[romanowski] val importCacheSetups = internalTask[Seq[CacheSetup]]("importCacheSetups")
+  private[romanowski] val exportCacheSetups = internalTask[Seq[ExportCacheSetup]]("exportCacheSetups")
+  private[romanowski] val perConfigurationSetup = internalTask[CacheSetup]("perConfigurationSetup")
+  private[romanowski] val perConfigurationExportSetup = internalTask[ExportCacheSetup]("perConfigurationExportSetup")
+}
+
+object HoarderPlugin extends AutoPlugin {
+
+  override def projectSettings = defaultPerProject ++ Stash.settings
+
+  override def globalSettings: Seq[_root_.sbt.Def.Setting[_]] = Stash.globalSettings ++ defaultsGlobal
+
+  override def trigger: PluginTrigger = AllRequirements
+
+  object autoImport {
+    val hoarder = HoarderKeys
+  }
+
+  import HoarderKeys._
+
+
+  private [romanowski] def includeConfiguration(config: Configuration): Seq[Setting[_]] = {
+    inConfig(config)(Seq(
+      perConfigurationSetup := projectSetupFor.value,
+      perConfigurationExportSetup := ExportCacheSetup(perConfigurationSetup.value, compileIncremental.value)
+    )) ++ Seq(
+      importCacheSetups += perConfigurationSetup.in(config).value,
+      exportCacheSetups += perConfigurationExportSetup.in(config).value
+    )
+  }
+
   private def projectSetupFor = Def.task[CacheSetup] {
     CacheSetup(
       sourceRoots = managedSourceDirectories.value ++ unmanagedSourceDirectories.value,
@@ -78,14 +86,14 @@ object HoarderPlugin extends AutoPlugin {
       relativeCacheLocation = Paths.get(name.value).resolve(configuration.value.name),
       overrideExistingCache = overrideExistingCache.value,
       cleanOutputMode = cleanOutputMode.value,
-      zipAnalysisFile = zipHoarderAnalysisCache.value
+      zipAnalysisFile = zipAnalysisCache.value
     )
   }
 
 
   def defaultsGlobal = Seq(
     cleanOutputMode := CleanClasses,
-    zipHoarderAnalysisCache := true,
+    zipAnalysisCache := true,
     overrideExistingCache := false,
     importCacheSetups := Nil,
     exportCacheSetups := Nil

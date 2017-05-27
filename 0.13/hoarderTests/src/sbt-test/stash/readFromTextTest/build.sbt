@@ -1,1 +1,1 @@
-zipHoarderAnalysisCache := false
+hoarder.zipAnalysisCache := false

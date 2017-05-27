@@ -4,6 +4,6 @@ configs(TestIntegration)
 
 inConfig(TestIntegration)(Defaults.configSettings)
 
-includeConfiguration(TestIntegration)
+hoarder.withConfiguration(TestIntegration)
 
 testRecompilationIn(Test, Compile, TestIntegration)

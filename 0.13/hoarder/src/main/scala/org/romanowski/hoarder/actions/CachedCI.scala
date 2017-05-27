@@ -4,12 +4,12 @@
  * This software is released under the terms written in LICENSE.
  */
 
-package org.romanowski.hoarder.actions
+package org.romanowski
+package hoarder.actions
 
 import java.nio.file.Path
 
-import org.romanowski.HoarderPlugin
-import org.romanowski.HoarderPlugin.autoImport._
+import org.romanowski.HoarderKeys._
 import org.romanowski.hoarder.core.HoarderEngine
 import sbt.Def._
 import sbt.Keys._
@@ -43,12 +43,12 @@ object CachedCI extends HoarderEngine {
     def loadCache(op: Path => Unit): Unit
   }
 
-  private val doImportCiCaches = HoarderPlugin.internalTask[Unit]("doImportCiCaches")
-  private val doExportCiCaches = HoarderPlugin.internalTask[Unit]("doExportCiCaches")
+  private val doImportCiCaches = internalTask[Unit]("doImportCiCaches")
+  private val doExportCiCaches = internalTask[Unit]("doExportCiCaches")
 
 
   def projectSettings = Seq(
-    doImportCiCaches := currentSetup.value.loadCachePart {
+    doImportCiCaches := cachedCiSetup.value.loadCachePart {
       path =>
         val paths = importCacheSetups.value.map { setup =>
           importCacheTaskImpl(setup, path)
@@ -56,14 +56,14 @@ object CachedCI extends HoarderEngine {
         }
         streams.value.log.info(s"Cache imported from $paths")
     },
-    doExportCiCaches := currentSetup.value.exportCachePart { cachePath =>
+    doExportCiCaches := cachedCiSetup.value.exportCachePart { cachePath =>
       val paths = exportCacheSetups.value.map(exportCacheTaskImpl(cachePath)).map(_.toAbsolutePath)
       streams.value.log.info(s"Cache exported to $paths")
     },
     aggregate.in(doImportCiCaches) := true,
     aggregate.in(doExportCiCaches) := true,
     preBuild := Def.taskDyn {
-      val setup = currentSetup.value
+      val setup = cachedCiSetup.value
 
       if (setup.shouldUseCache()) Def.task(setup.loadCache { path =>
         aggregatedTask(doImportCiCaches).value
@@ -72,10 +72,10 @@ object CachedCI extends HoarderEngine {
       else Def.task(streams.value.log.info(s"Cache won't be used."))
     }.value,
     postBuild := Def.taskDyn {
-      val setup = currentSetup.value
+      val setup = cachedCiSetup.value
       if (setup.shouldPublishCaches()) {
         setup.invalidateCache()
-        Def.task(currentSetup.value.exportCache { path =>
+        Def.task(cachedCiSetup.value.exportCache { path =>
           aggregatedTask(doExportCiCaches).value
           streams.value.log.info(s"Cache exported to $path")
         })
@@ -94,7 +94,7 @@ object CachedCI extends HoarderEngine {
   }
 
   def globalSettings(setup: Setup) = Seq(
-    currentSetup := setup
+    cachedCiSetup := setup
   )
 
 }

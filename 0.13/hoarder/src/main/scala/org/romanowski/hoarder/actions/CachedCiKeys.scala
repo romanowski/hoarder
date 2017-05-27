@@ -11,6 +11,6 @@ trait CachedCiKeys {
   val postBuild = TaskKey[Unit]("postBuild", "Task indented to be run after CI build. " +
     "It will upload cache for post-merge builds.")
 
-  val currentSetup = SettingKey[Setup]("hoarder:currentSetup",
+  val cachedCiSetup = SettingKey[Setup]("hoarder:currentSetup",
     "Current CachedCI setup object that provides context for your CI flow.")
 }
