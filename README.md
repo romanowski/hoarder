@@ -34,10 +34,36 @@ Running `stash` task will store your current compilation data in a global direct
 
 ### [Cached PR verfication builds (e.g. Travis ones)](docs/stash.md)
 
-This workflow aims in speed up of PR verification build incrementally compiles PR changes. It is desgined to generate caches and verify build every time PR is merged (push build on Travis) and reuse that artefacts later (in future PRs).
-TODO simplest configuration. 
-More can be found in [docs](docs/prVerification.md).
+This workflow main goal is speed up of PR verification builds incrementally recompiling changes in PR. 
 
+There are 2 parts of this workflow: *PR verification build* (that use generated cached to speed up compilation) and *build after PR is merged* (that performs full compilaiton to be super safe and generate caches for future PR verification builds).
+
+Hoarder allows anyone to define custom PR integration by providing new `CachedCI.Setup` instance.
+
+Hoarder also provides predefine integrations e.g. for Travis. In order to use it (Travis one) all you need to do is:
+ * create custom autoplugin with configuration in `project` that extends one of predefined flows e.g. 
+ ```scala
+// project/CachedCi.scala
+import org.romanowski.hoarder.actions.ci.TravisPRValidation
+ 
+object CachedCi extends TravisPRValidation.PluginBase 
+```
+ * add cache definition to your build definition (usually`.travis.yml` file)
+```yaml
+cache:
+  directories:
+  - .hoarder-cache
+```
+ * add hoarder `sbt preBuild` and `sbt postBuild` tasks around your build commands, e.g.
+ ```yaml
+ - sbt preBuild 
+ - sbt <your-original-build-command>
+ - sbt postBuild
+ ```
+
+Minimal example configuration for ensime-server can be found in [this PR](https://github.com/romanowski/ensime-server/pull/1).
+ 
+More can be found in [docs](docs/prVerification.md).
 
 ### From release
 
