@@ -3,32 +3,30 @@ language: scala
 scala:
   - 2.11.8
 
+before_cache:
+  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
+  - find $HOME/.sbt        -name "*.lock"               -print -delete
+
 cache:
   directories:
   - 0.13/.hoarder-cache
+  - $HOME/.ivy2/cache
+  - $HOME/.sbt
+  - $HOME/.coursier
   # Uncomment below after new release of sbt
   #- 1.0/.hoarder-cache
 
+env:
+  matrix:
+   - scriptName=integrationTest
+   - scriptName=sbtTests-0.13
+#   Uncomment below after new release of sbt
+#   - scriptName=sbtTests-1.0
+
 
 script:
-  - cd 0.13
-  - sbt test
-  - sbt scripted
-  - sbt "set version.in(hoarder) :=\"1.0-for-test\"" hoarder/publishLocal
-  # simulate stash workflow, first clone
-  - git clone -b hoarder-integration-test https://github.com/romanowski/ensime-server.git test-ws
-  # download caches
-  - mv .hoarder-cache test-ws
-  - cd test-ws
-  - sbt preBuild
-  - sbt test:compile
-  - sbt postBuild
-  # upload caches
-  - cd ..
-  - mv test-ws/.hoarder-cache .
-# Uncomment below after new release of sbt
-#  - cd ../1.0
-#  - sbt test
+  - echo Will run ci-scripts/scriptName.sh
+  - bash ci-scripts/$scriptName.sh
 
 jdk:
   - oraclejdk8

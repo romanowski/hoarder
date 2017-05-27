@@ -89,7 +89,9 @@ class HoarderEngine extends HoarderEngineCommon {
                                              globalCacheLocation: Path): Option[PreviousCompilationResult] = {
     import cacheSetup._
     val cacheLocation = cacheSetup.cacheLocation(globalCacheLocation)
-    assert(Files.isDirectory(cacheLocation) && Files.exists(cacheLocation), s"Cache does not exists in $cacheLocation")
+    assert(
+      Files.isDirectory(cacheLocation) && Files.exists(cacheLocation),
+      s"Cache does not exists in ${cacheLocation.toAbsolutePath()}")
 
     val mapper = createMapper(cacheSetup)
     val outputDir = classesRoot.toFile
