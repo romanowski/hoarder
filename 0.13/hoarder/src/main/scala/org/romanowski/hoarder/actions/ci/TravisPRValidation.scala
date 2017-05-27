@@ -43,4 +43,5 @@ object TravisPRValidation {
 
   class PluginBase(cacheDirectory: Path = defaultLocation, cachedBranches: Set[String] = Set.empty)
     extends CachedCI.PluginBase(TravisPRValidation(defaultLocation, cachedBranches))
+
 }

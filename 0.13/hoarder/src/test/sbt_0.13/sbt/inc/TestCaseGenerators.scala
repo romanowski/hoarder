@@ -2,14 +2,13 @@ package sbt.inc
 
 import java.io.File
 
+import org.scalacheck.Arbitrary._
+import org.scalacheck.Gen._
 import org.scalacheck._
-import Arbitrary._
-import Gen._
-
 import sbt.Relation
-import xsbti.api._
-import xsbti.SafeLazy
 import xsbti.DependencyContext._
+import xsbti.SafeLazy
+import xsbti.api._
 
 /**
   * Scalacheck generators for Analysis objects and their substructures.
@@ -18,9 +17,12 @@ import xsbti.DependencyContext._
   */
 object TestCaseGenerators {
   // We restrict sizes, otherwise the generated Analysis objects get huge and the tests take a long time.
-  val maxSources = 10 // Max number of source files.
-  val maxRelatives = 10 // Max number of things that a source x can relate to in a single Relation.
-  val maxPathSegmentLen = 10 // Max number of characters in a path segment.
+  val maxSources = 10
+  // Max number of source files.
+  val maxRelatives = 10
+  // Max number of things that a source x can relate to in a single Relation.
+  val maxPathSegmentLen = 10
+  // Max number of characters in a path segment.
   val maxPathLen = 6 // Max number of path segments in a path.
 
   // Ensure that we generate unique class names and file paths every time.
@@ -73,9 +75,9 @@ object TestCaseGenerators {
 
   // We need "proper" definitions with specific class names, as groupBy use these to pick a representative top-level class when splitting.
   private[this] def makeDefinition(name: String): Definition =
-    new ClassLike(DefinitionType.ClassDef, lzy(new EmptyType()),
-      lzy(new Structure(lzy(Array()), lzy(Array()), lzy(Array()))), Array(), Array(),
-      name, new Public(), new Modifiers(false, false, false, false, false, false, false, false), Array())
+  new ClassLike(DefinitionType.ClassDef, lzy(new EmptyType()),
+    lzy(new Structure(lzy(Array()), lzy(Array()), lzy(Array()))), Array(), Array(),
+    name, new Public(), new Modifiers(false, false, false, false, false, false, false, false), Array())
 
   private[this] def lzy[T <: AnyRef](x: T) = SafeLazy.strict(x)
 
@@ -135,8 +137,10 @@ object TestCaseGenerators {
   def genRSource(srcs: List[File]): Gen[Relations.Source] = for {
     internal <- listOfN(srcs.length, someOf(srcs)) // Internal dep targets must come from list of sources.
     external <- genStringRelation(srcs)
-  } yield Relations.makeSource( // Ensure that we don't generate a dep of some file on itself.
-    Relation.reconstruct((srcs zip (internal map { _.toSet }) map { case (a, b) => (a, b - a) }).toMap),
+  } yield Relations.makeSource(// Ensure that we don't generate a dep of some file on itself.
+    Relation.reconstruct((srcs zip (internal map {
+      _.toSet
+    }) map { case (a, b) => (a, b - a) }).toMap),
     external)
 
   def genSubRSource(src: Relations.Source): Gen[Relations.Source] = for {
@@ -148,7 +152,9 @@ object TestCaseGenerators {
     internal <- listOfN(srcs.length, someOf(srcs))
     external <- genStringRelation(srcs)
   } yield Relations.makeSourceDependencies(
-    Relation.reconstruct((srcs zip (internal map { _.toSet }) map { case (a, b) => (a, b - a) }).toMap),
+    Relation.reconstruct((srcs zip (internal map {
+      _.toSet
+    }) map { case (a, b) => (a, b - a) }).toMap),
     external)
 
   def genSubRSourceDependencies(src: Relations.SourceDependencies): Gen[Relations.SourceDependencies] = for {

@@ -10,7 +10,21 @@ package hoarder.tests
 import sbt.Keys._
 import sbt._
 
-object PluginTests {
+object PluginTests extends AutoPlugin{
+
+  object autoImport {
+    def testRecompilationIn(configurations: Configuration*) = Seq(
+      testCacheImportKey := streams.value.log.success(s"Testing for ${name.value}"),
+      scalaVersion := "2.11.8"
+    ) ++ configurations.flatMap(testConfiguration)
+
+  }
+  import autoImport._
+
+  override def trigger: PluginTrigger = AllRequirements
+
+  override def projectSettings: Seq[Setting[_]] =
+    testRecompilationIn(Compile, Test) ++ Seq(changeLineEndings, aggregate.in(runTestKey) := true)
 
   private val runTestKey = TaskKey[Unit]("")
   private val testCacheImportKey = TaskKey[Unit]("testCacheImport")
@@ -31,12 +45,14 @@ object PluginTests {
   private def runTest = Def.task {
     val classesDir = classDirectory.value
 
-    assertNothingRecompiled(manipulateBytecode.value)
+    if(sources.value.nonEmpty) {
+      assertNothingRecompiled(manipulateBytecode.value)
 
-    val allClasses = (classesDir ** "*.class").get
-    assert(allClasses.nonEmpty, s"No classes present in $classesDir!")
+      val allClasses = (classesDir ** "*.class").get
+      assert(allClasses.nonEmpty, s"No classes present in $classesDir!")
 
-    streams.value.log.success(s"Nothing modified in $classesDir")
+      streams.value.log.success(s"Nothing modified in $classesDir")
+    }
   }
 
   def perConfigSettings = Seq(
@@ -44,19 +60,12 @@ object PluginTests {
     manipulateBytecode ~= assertNothingRecompiled
   )
 
-  def testRecompilation = testRecompilationIn(Compile, Test) ++ Seq(changeLineEndings)
-
   def testConfiguration(configuration: Configuration) =
     inConfig(configuration)(perConfigSettings) ++
       Seq(testCacheImportKey := {
         testCacheImportKey.value
         runTestKey.in(configuration).value
       })
-
-  def testRecompilationIn(configurations: Configuration*) = Seq(
-    testCacheImportKey := streams.value.log.success(s"Testing for ${name.value}"),
-    scalaVersion := "2.11.8"
-  ) ++ configurations.flatMap(testConfiguration)
 
   private def changeLineEndingsForFile(content: String): String = {
     val fileLines = content.linesIterator.toSeq

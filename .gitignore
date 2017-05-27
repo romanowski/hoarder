@@ -18,6 +18,3 @@ project/plugins/project/
 
 # Intellij
 .idea
-
-#Integration tests
-/0.13/ciIntegrationTest

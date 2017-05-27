@@ -14,7 +14,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util
 
-import org.romanowski.HoarderSettings.CacheSetup
+import org.romanowski.HoarderKeys.CacheSetup
 import org.romanowski.hoarder.core.SbtTypes.CompilationResult
 import org.romanowski.hoarder.core.SbtTypes.PreviousCompilationResult
 import sbt.PathFinder

@@ -5,4 +5,3 @@ $ touch .cached-compilation
 > stashApply
 $ touch .cached-compilation-done
 > testCacheImport
-# TODO add incremental recompile

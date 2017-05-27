@@ -8,7 +8,7 @@ package org.romanowski.hoarder.core
 
 import java.nio.file.Path
 
-import org.romanowski.HoarderSettings._
+import org.romanowski.HoarderKeys._
 import org.romanowski.hoarder.core.SbtTypes.CompilationResult
 import org.romanowski.hoarder.core.SbtTypes.PreviousCompilationResult
 

@@ -1,6 +1,8 @@
 package sbt.internal.inc
 
-import java.io.{ BufferedReader, File, Writer }
+import java.io.BufferedReader
+import java.io.File
+import java.io.Writer
 import java.nio.file.Paths
 
 // Very simple timer for timing repeated code sections.
@@ -43,16 +45,14 @@ object FormatCommons extends FormatCommons
 /** Various helper functions. */
 trait FormatCommons {
 
-  val fileToString: File => String =
-    { f: File => f.toPath.toString }
-  val stringToFile: String => File =
-    { s: String =>
-      try {
-        Paths.get(s).toFile
-      } catch {
-        case e: Exception => sys.error(e.getMessage + ": " + s)
-      }
+  val fileToString: File => String = { f: File => f.toPath.toString }
+  val stringToFile: String => File = { s: String =>
+    try {
+      Paths.get(s).toFile
+    } catch {
+      case e: Exception => sys.error(e.getMessage + ": " + s)
     }
+  }
 
 
   def writeHeader(out: Writer, header: String): Unit = out.write(header + ":\n")
@@ -65,13 +65,15 @@ trait FormatCommons {
   def writeSize(out: Writer, n: Int): Unit = out.write("%d items\n".format(n))
 
   private val itemsPattern = """(\d+) items""".r
+
   private[this] def readSize(in: BufferedReader): Int = {
     in.readLine() match {
       case itemsPattern(nStr) => Integer.parseInt(nStr)
-      case s: String          => throw new ReadException("\"<n> items\"", s)
-      case null               => throw new EOFException
+      case s: String => throw new ReadException("\"<n> items\"", s)
+      case null => throw new EOFException
     }
   }
+
   protected def writeSeq[T](out: Writer)(header: String, s: Seq[T], t2s: T => String): Unit = {
     // We write sequences as idx -> element maps, for uniformity with maps/relations.
     def n = s.length
@@ -83,9 +85,9 @@ trait FormatCommons {
   }
 
   protected def writeMap[K, V](out: Writer)(header: String, m: Map[K, V],
-    k2s: K => String,
-    v2s: V => String,
-    inlineVals: Boolean = true)(implicit ord: Ordering[K]): Unit =
+                                            k2s: K => String,
+                                            v2s: V => String,
+                                            inlineVals: Boolean = true)(implicit ord: Ordering[K]): Unit =
     writePairs(out)(header, m.keys.toSeq.sorted map { k => (k, (m(k))) }, k2s, v2s, inlineVals)
 
   protected def writePairs[K, V](out: Writer)(header: String, s: Seq[(K, V)], k2s: K => String, v2s: V => String, inlineVals: Boolean = true): Unit = {
