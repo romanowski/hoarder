@@ -3,9 +3,15 @@ language: scala
 scala:
   - 2.11.8
 
+before_cache:
+  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
+  - find $HOME/.sbt        -name "*.lock"               -print -delete
+
 cache:
   directories:
   - 0.13/.hoarder-cache
+  - $HOME/.ivy2/cache
+  - $HOME/.sbt
   # Uncomment below after new release of sbt
   #- 1.0/.hoarder-cache
 
@@ -16,13 +22,16 @@ script:
   - sbt scripted
   - sbt "set version.in(hoarder) :=\"1.0-for-test\"" hoarder/publishLocal
   # simulate stash workflow, first clone
-  - git clone -b hoarder-integration-test https://github.com/romanowski/ensime-server.git test-ws
+  - git clone -b hoarder-ci https://github.com/romanowski/ensime-server.git test-ws
   # download caches
   - mv .hoarder-cache test-ws
   - cd test-ws
+  -  git merge origin/hoarder-ci-test
+  - echo 'addSbtPlugin("com.github.romanowski" % "hoarder" % "1.0-for-test")' > project/hoarder.sbt
   - sbt preBuild
   - sbt test:compile
   - sbt postBuild
+  - sbt preventCompilationStatus
   # upload caches
   - cd ..
   - mv test-ws/.hoarder-cache .
