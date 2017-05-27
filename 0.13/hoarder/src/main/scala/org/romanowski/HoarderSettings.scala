@@ -6,12 +6,13 @@
 
 package org.romanowski
 
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.Path
+import java.nio.file.Paths
 
+import org.romanowski.hoarder.core.SbtTypes.CompilationResult
 import org.romanowski.hoarder.core._
 import sbt.Keys._
 import sbt._
-import SbtTypes.CompilationResult
 
 object HoarderSettings {
 
@@ -22,8 +23,9 @@ object HoarderSettings {
                         analysisFile: File,
                         relativeCacheLocation: Path,
                         overrideExistingCache: Boolean,
-                        cleanOutputMode: CleanOutputMode
-                       ){
+                        cleanOutputMode: CleanOutputMode,
+                        zipAnalysisFile: Boolean
+                       ) {
     def cacheLocation(root: Path) = root.resolve(relativeCacheLocation)
   }
 
@@ -31,6 +33,7 @@ object HoarderSettings {
 
 
   val cleanOutputMode = SettingKey[CleanOutputMode]("cleanOutputMode", "What should be cleaned prior to cache extraction")
+  val zipAnalysisFile = SettingKey[Boolean]("zipAnalysisFile", "Determines if analysis file will be zipped or not")
   val overrideExistingCache = SettingKey[Boolean]("overrideExistingCache", "Override existing stash")
 
   private[romanowski] val importCacheSetups = TaskKey[Seq[CacheSetup]]("hoarder:internal:importCacheSetups", "Internal")
@@ -49,22 +52,24 @@ object HoarderSettings {
       analysisFile = (streams in compileIncSetup).value.cacheDirectory / compileAnalysisFilename.value,
       relativeCacheLocation = Paths.get(name.value).resolve(configuration.value.name),
       overrideExistingCache = overrideExistingCache.value,
-      cleanOutputMode = cleanOutputMode.value
+      cleanOutputMode = cleanOutputMode.value,
+      zipAnalysisFile = zipAnalysisFile.value
     )
   }
 
 
   def defaultsGlobal = Seq(
-      cleanOutputMode := CleanClasses,
-      overrideExistingCache := false,
-      importCacheSetups := Nil,
-      exportCacheSetups := Nil
-    )
+    cleanOutputMode := CleanClasses,
+    zipAnalysisFile := true,
+    overrideExistingCache := false,
+    importCacheSetups := Nil,
+    exportCacheSetups := Nil
+  )
 
   def defaultPerProject =
     Seq(importCacheSetups := Nil, exportCacheSetups := Nil) ++
-    includeConfiguration(Compile) ++
-    includeConfiguration(Test)
+      includeConfiguration(Compile) ++
+      includeConfiguration(Test)
 
   def includeConfiguration(config: Configuration) = {
     inConfig(config)(Seq(
