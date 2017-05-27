@@ -16,9 +16,9 @@ Both stash and stashApply accept two optional parameters that control project la
 * `defaultProjectLabel` that is by default set to the name ot root directory where your project lives
 * `defaultVersionLabel` that is set to 'HEAD' by default
 
-### Stash task
+### Stashing current compilation: `stash` task.
 
-`stash [<projectLabe>l [<versionLabel>]]`
+`stash [<projectLabel> [<versionLabel>]]`
 
 This task will stash compilation artifacts for provided project (or for all if non is provided) and all its dependecies.
 
@@ -26,10 +26,16 @@ Stash command will run `compile` for your project and its tests so project needs
 
 By default you cannot override the exisiting cache but this behaviour can be changed by `overrideExistingCache` setting.
 
-### StashApply task
+### Loading stashed compilation: `stashApply` task
 
-`stashApply [<projectLabe>l [<versionLabel>]]`
+`stashApply [<projectLabel> [<versionLabel>]]`
 
 This task will load stashed compilation artifacts for provided project (or for all if non is provided) and all its dependecies.
 
 Loading cached results needs to clean up previous compilation (if exsist) and by default it will remove all *.class files from output. This behaviour can be chaneged with `cleanOutputMode` settings (currently FailOnNonEmpty, CleanOutput and CleanClasses are supported)
+
+### Cleaning stashed compilation: `stashClean` task
+
+`stashApply [<projectLabel> [<versionLabel>]]`
+
+This task will clean cached compilation under given labels. Implemented for @mfedortsov. 
