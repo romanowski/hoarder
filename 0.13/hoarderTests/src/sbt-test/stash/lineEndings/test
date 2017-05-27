@@ -1,0 +1,7 @@
+> stash
+$ touch .cached-compilation
+> changeLineEndings
+> clean
+> stashApply
+$ touch .cached-compilation-done
+> testCacheImport

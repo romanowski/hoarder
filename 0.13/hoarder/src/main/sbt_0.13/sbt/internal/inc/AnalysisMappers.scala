@@ -96,7 +96,7 @@ trait AnalysisMappers {
 
   val binaryStampMapper: ContextAwareMapper[File, Stamp] = Mapper.forStamp
   val productStampMapper: ContextAwareMapper[File, Stamp] = Mapper.forStamp
-  val sourceStampMapper: ContextAwareMapper[File, Stamp] = Mapper.forStamp
+  val sourceStampMapper: ContextAwareMapper[File, Stamp] = LineEndingAgnosticSources.mapper
 
 }
 
