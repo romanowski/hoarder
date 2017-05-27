@@ -25,12 +25,19 @@ Hoarder does not have any stable release so far, and you can track progress for 
 
 ## Integration with your project
 
-Hoarder can be used in your project in multiple ways described below. For now only the 'stash' workflow is supported, but there's more to come (feel free to create an issue with your own ideas).
+Hoarder can be used in your project in multiple ways (workflows) described below. For now onlt few are supported but there's more to come (feel free to create issues with your own ideas).
 
-### Stash
+### [Stash workflow](docs/stash.md)
 
 Stash workflow allows you to stash compilation results similarly to changes in git.
 Running `stash` task will store your current compilation data in a global directory for your project and later you can import that compilation using `stashApply` command. More can be found in [docs](docs/stash.md).
+
+### [Cached PR verfication builds (e.g. Travis ones)](docs/stash.md)
+
+This workflow aims in speed up of PR verification build incrementally compiles PR changes. It is desgined to generate caches and verify build every time PR is merged (push build on Travis) and reuse that artefacts later (in future PRs).
+TODO simplest configuration. 
+More can be found in [docs](docs/prVerification.md).
+
 
 ### From release
 
