@@ -1,0 +1,11 @@
+> "set version := 1234.toString"
+> publish
+> clean
+$ touch .cached-compilation
+-> "loadRelease non-exisitng"
+> "loadRelease 1234"
+$ touch .cached-compilation-done
+> testCacheImport
+> clean
+> "set hoarder.failOnMissing := false"
+> loadRelease non-exisitng

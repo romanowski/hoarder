@@ -10,6 +10,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 import org.romanowski.hoarder.actions.CachedCiKeys
+import org.romanowski.hoarder.actions.CachedReleaseKeys
 import org.romanowski.hoarder.actions.Stash
 import org.romanowski.hoarder.actions.StashKeys
 import org.romanowski.hoarder.core.CleanClasses
@@ -19,7 +20,7 @@ import sbt.Keys._
 import sbt._
 
 
-object HoarderKeys extends StashKeys with CachedCiKeys {
+object HoarderKeys extends StashKeys with CachedCiKeys with CachedReleaseKeys {
   private[romanowski] def internalTask[T: Manifest](name: String) =
     TaskKey[T](s"hoarder:internal:$name", s"Internal hoarder task: $name. Please do not use.")
 
@@ -32,16 +33,23 @@ object HoarderKeys extends StashKeys with CachedCiKeys {
                         relativeCacheLocation: Path,
                         overrideExistingCache: Boolean,
                         cleanOutputMode: CleanOutputMode,
-                        zipAnalysisFile: Boolean
+                        zipAnalysisFile: Boolean,
+                        configuration: Configuration,
+                        name: String
                        ) {
     def cacheLocation(root: Path) = root.resolve(relativeCacheLocation)
   }
 
   case class ExportCacheSetup(cacheSetup: CacheSetup, compilationResult: CompilationResult)
 
+  case class ExportedCache(analysis: Path, binaries: Option[Path])
+
   val cleanOutputMode = SettingKey[CleanOutputMode]("hoarder:cleanOutputMode", "What should be cleaned prior to cache extraction")
   val zipAnalysisCache = SettingKey[Boolean]("hoarder:zipAnalysisFile", "Determines if analysis file will be zipped or not")
   val overrideExistingCache = SettingKey[Boolean]("hoarder:overrideExistingCache", "Override existing stash")
+  val enabledConfigurations = SettingKey[Seq[Configuration]]("hoarder:enabledConfigurations",
+    "Configuration that hoarder will use")
+
 
   def withConfiguration(config: Configuration): Seq[Setting[_]] = HoarderPlugin.includeConfiguration(config)
 
@@ -66,13 +74,14 @@ object HoarderPlugin extends AutoPlugin {
   import HoarderKeys._
 
 
-  private [romanowski] def includeConfiguration(config: Configuration): Seq[Setting[_]] = {
+  private[romanowski] def includeConfiguration(config: Configuration): Seq[Setting[_]] = {
     inConfig(config)(Seq(
       perConfigurationSetup := projectSetupFor.value,
       perConfigurationExportSetup := ExportCacheSetup(perConfigurationSetup.value, compileIncremental.value)
     )) ++ Seq(
       importCacheSetups += perConfigurationSetup.in(config).value,
-      exportCacheSetups += perConfigurationExportSetup.in(config).value
+      exportCacheSetups += perConfigurationExportSetup.in(config).value,
+      enabledConfigurations += config
     )
   }
 
@@ -86,7 +95,9 @@ object HoarderPlugin extends AutoPlugin {
       relativeCacheLocation = Paths.get(name.value).resolve(configuration.value.name),
       overrideExistingCache = overrideExistingCache.value,
       cleanOutputMode = cleanOutputMode.value,
-      zipAnalysisFile = zipAnalysisCache.value
+      zipAnalysisFile = zipAnalysisCache.value,
+      configuration = configuration.value,
+      name = name.value
     )
   }
 
@@ -100,7 +111,7 @@ object HoarderPlugin extends AutoPlugin {
   )
 
   def defaultPerProject =
-    Seq(importCacheSetups := Nil, exportCacheSetups := Nil) ++
+    Seq(importCacheSetups := Nil, exportCacheSetups := Nil, enabledConfigurations := Nil) ++
       includeConfiguration(Compile) ++
       includeConfiguration(Test)
 }

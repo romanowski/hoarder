@@ -34,7 +34,7 @@ object CachedCI extends HoarderEngine {
     * `postBuild` sbt task will invoke:
     * if (setup.shouldPublishCaches()){
     *    setup.invalidateCache()
-    *    <do-hoarder-cache-export>
+    * <do-hoarder-cache-export>
     * }
     *
     * Cache export/import (whole process) will be invoked inside exportCache/loadCache methods
@@ -82,7 +82,7 @@ object CachedCI extends HoarderEngine {
     },
     doExportCiCaches := cachedCiSetup.value.exportCachePart {
       cachePath =>
-        val paths = exportCacheSetups.value.map(exportCacheTaskImpl(cachePath)).map(_.toAbsolutePath)
+        val paths = exportCacheSetups.value.map(exportCacheTaskImpl(cachePath)).map(_.analysis.toAbsolutePath)
         streams.value.log.info(s"Cache exported to $paths")
     },
     aggregate.in(doImportCiCaches) := true,
