@@ -18,4 +18,8 @@ the License.
 
 0.13/hoarder/src/main/scala/sbt contains sources that are taken from sbt and zinc projects.
 Sources modified in order to backport changes from zinc to sbt 0.13.
-Licences can be found in SBT_LICENCE and ZINC_LICENCE files.
+Licenses can be found in SBT_LICENSE and ZINC_LICENSE files.
+
+0.13/hoarder/src/main/scala/coursier contains sources that are taken from coursier project.
+Sources modified in order to include coursier features without forcing hoarder users to use coursier as dependency resolver.
+Cousier has Apache License 2.0.

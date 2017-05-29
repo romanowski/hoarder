@@ -1,0 +1,11 @@
+> "set version.in(ThisBuild) := 1234.toString"
+> publish
+> clean
+$ touch .cached-compilation
+-> "loadRelease non-exisitng"
+> "loadRelease 1234"
+$ touch .cached-compilation-done
+> testCacheImport
+> clean
+> "set hoarder.failOnMissing.in(ThisBuild) := false"
+> loadRelease non-exisitng

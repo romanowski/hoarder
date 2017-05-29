@@ -15,8 +15,10 @@ import java.nio.file.Path
 import java.util
 
 import org.romanowski.HoarderKeys.CacheSetup
+import org.romanowski.HoarderKeys.ExportedCache
 import org.romanowski.hoarder.core.SbtTypes.CompilationResult
 import org.romanowski.hoarder.core.SbtTypes.PreviousCompilationResult
+import sbt.Compiler.PreviousAnalysis
 import sbt.PathFinder
 import sbt._
 import sbt.compiler.MixedAnalyzingCompiler
@@ -39,45 +41,63 @@ class HoarderEngine extends HoarderEngineCommon {
       .getPath("/", analysisCacheFileName)
   }
 
-  protected override def exportCacheTaskImpl(cacheSetup: CacheSetup,
-                                             result: CompilationResult,
-                                             globalCacheLocation: Path): Path = {
-    import cacheSetup._
-    val cacheLocation = cacheSetup.cacheLocation(globalCacheLocation)
-    assert(!Files.exists(cacheLocation) || overrideExistingCache, s"Cache already exists in $cacheLocation!")
+  protected def cleanupAndPrepareCacheLocation(cacheLocation: Path, cacheSetup: CacheSetup): Unit = {
+    assert(!Files.exists(cacheLocation) || cacheSetup.overrideExistingCache,
+      s"Cache already exists in $cacheLocation!")
 
     if (Files.exists(cacheLocation)) {
-      if (overrideExistingCache) IO.delete(cacheLocation.toFile)
+      if (cacheSetup.overrideExistingCache) IO.delete(cacheLocation.toFile)
       else new IllegalArgumentException(s"Cache already exists at $cacheLocation.")
     }
 
     Files.createDirectories(cacheLocation)
+  }
 
+  protected def exportAnalysis(cacheLocation: Path, cacheSetup: CacheSetup, result: CompilationResult): Path = {
     val mapper = createMapper(cacheSetup)
 
-    val exportedAnalysisPath = if (cacheSetup.zipAnalysisFile)
-      analysisPathFromZip(cacheLocation.resolve(analysisCacheZipFileName), create = true)
-    else
-      cacheLocation.resolve(analysisCacheFileName)
+    val exportedAnalysisPath =
+      if (cacheSetup.zipAnalysisFile) cacheLocation.resolve(analysisCacheZipFileName)
+      else cacheLocation.resolve(analysisCacheFileName)
 
-    val fos = Files.newBufferedWriter(exportedAnalysisPath, charset)
+    val writablePath =
+      if (cacheSetup.zipAnalysisFile) analysisPathFromZip(exportedAnalysisPath, create = true)
+      else exportedAnalysisPath
+
+    val fos = Files.newBufferedWriter(writablePath, charset)
     try {
       new MappableFormat(mapper).write(fos, result.analysis, result.setup)
+      exportedAnalysisPath
     } finally {
       fos.close()
-      if (cacheSetup.zipAnalysisFile) exportedAnalysisPath.getFileSystem.close()
+      if (cacheSetup.zipAnalysisFile) writablePath.getFileSystem.close()
     }
+  }
 
+  protected def exportBinaries(cacheLocation: Path, cacheSetup: CacheSetup, result: CompilationResult): Option[Path] = {
     val outputPath = outputForProject(result.setup).toPath
 
-    val classes = (PathFinder(classesRoot.toFile) ** "*.class").get
+    val classes = (PathFinder(cacheSetup.classesRoot.toFile) ** "*.class").get
     val classesToZip = classes.map { classFile =>
       val mapping = outputPath.relativize(classFile.toPath).toString
       classFile -> mapping
     }
 
-    IO.zip(classesToZip, cacheLocation.resolve(classesZipFileName).toFile)
-    cacheLocation
+    val zippedBinaries = cacheLocation.resolve(classesZipFileName)
+    IO.zip(classesToZip, zippedBinaries.toFile)
+    Option(zippedBinaries)
+  }
+
+  protected override def exportCacheTaskImpl(cacheSetup: CacheSetup,
+                                             result: CompilationResult,
+                                             globalCacheLocation: Path): ExportedCache = {
+    val cacheLocation = cacheSetup.cacheLocation(globalCacheLocation)
+
+    cleanupAndPrepareCacheLocation(cacheLocation, cacheSetup)
+
+
+
+    ExportedCache(exportAnalysis(cacheLocation, cacheSetup, result), exportBinaries(cacheLocation, cacheSetup, result))
   }
 
   private def zipAnalysis(cacheLocation: Path): Option[Path] = {
@@ -85,49 +105,59 @@ class HoarderEngine extends HoarderEngineCommon {
     if (Files.exists(zipPath)) Option(analysisPathFromZip(zipPath)) else None
   }
 
+  protected def prepareImportDirectory(cacheSetup: CacheSetup): Unit = {
+    val outputDir = cacheSetup.classesRoot.toFile
+    if (outputDir.exists()) {
+      if (outputDir.isDirectory) {
+        cacheSetup.cleanOutputMode match {
+          case CleanOutput =>
+            if (outputDir.list().nonEmpty) IO.delete(outputDir)
+          case FailOnNonEmpty =>
+            if (outputDir.list().nonEmpty)
+              throw new IllegalStateException(s"Output directory: $outputDir is not empty and cleanOutput is false")
+          case CleanClasses =>
+            val classFiles = PathFinder(outputDir) ** "*.class"
+            IO.delete(classFiles.get)
+        }
+      } else throw new IllegalStateException(s"Output file: $outputDir is not a directory")
+    }
+  }
+
+  protected def importBinaries(cacheSetup: CacheSetup, classesZip: Path): Unit = {
+    IO.unzip(classesZip.toFile, cacheSetup.classesRoot.toFile, preserveLastModified = true)
+  }
+
+  protected def importAnalysis(cacheSetup: CacheSetup, analysisPath: Path): PreviousAnalysis = {
+    val mapper = createMapper(cacheSetup)
+
+    val analysisReader = Files.newBufferedReader(analysisPath, charset)
+    val (analysis, setup) = try {
+      new MappableFormat(mapper).read(analysisReader)
+    } finally analysisReader.close()
+
+    val store = MixedAnalyzingCompiler.staticCachedStore(cacheSetup.analysisFile)
+    store.set(analysis, setup)
+
+    Compiler.PreviousAnalysis(analysis, Some(setup))
+  }
+
   protected override def importCacheTaskImpl(cacheSetup: CacheSetup,
                                              globalCacheLocation: Path): Option[PreviousCompilationResult] = {
-    import cacheSetup._
     val cacheLocation = cacheSetup.cacheLocation(globalCacheLocation)
     assert(
       Files.isDirectory(cacheLocation) && Files.exists(cacheLocation),
       s"Cache does not exists in ${cacheLocation.toAbsolutePath()}")
 
-    val mapper = createMapper(cacheSetup)
-    val outputDir = classesRoot.toFile
-
-
     val zippedAnalysis = zipAnalysis(cacheLocation)
     try {
       val analysisPath = zippedAnalysis getOrElse cacheLocation.resolve(analysisCacheFileName)
       val classesZip = cacheLocation.resolve(classesZipFileName)
+
       if (Files.exists(classesZip) && Files.exists(analysisPath)) {
-        if (outputDir.exists()) {
-          if (outputDir.isDirectory) {
-            cleanOutputMode match {
-              case CleanOutput =>
-                if (outputDir.list().nonEmpty) IO.delete(outputDir)
-              case FailOnNonEmpty =>
-                if (outputDir.list().nonEmpty)
-                  throw new IllegalStateException(s"Output directory: $outputDir is not empty and cleanOutput is false")
-              case CleanClasses =>
-                val classFiles = PathFinder(outputDir) ** "*.class"
-                IO.delete(classFiles.get)
-            }
-          } else throw new IllegalStateException(s"Output file: $outputDir is not a directory")
-        }
+        prepareImportDirectory(cacheSetup)
+        importBinaries(cacheSetup, classesZip)
 
-        IO.unzip(classesZip.toFile, outputDir, preserveLastModified = true)
-
-        val analysisReader = Files.newBufferedReader(analysisPath, charset)
-        val (analysis, setup) = try {
-          new MappableFormat(mapper).read(analysisReader)
-        } finally analysisReader.close()
-
-        val store = MixedAnalyzingCompiler.staticCachedStore(analysisFile)
-        store.set(analysis, setup)
-
-        Option(Compiler.PreviousAnalysis(analysis, Some(setup)))
+        Option(importAnalysis(cacheSetup, analysisPath))
       } else None
     } finally zippedAnalysis.foreach(_.getFileSystem.close())
   }

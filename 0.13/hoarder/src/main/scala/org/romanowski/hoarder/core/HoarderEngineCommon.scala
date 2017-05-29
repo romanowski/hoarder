@@ -17,9 +17,11 @@ trait HoarderEngineCommon {
   val analysisCacheZipFileName = "analysis.zip"
   val classesZipFileName = "classes.zip"
 
-  protected def exportCacheTaskImpl(setup: CacheSetup, result: CompilationResult, globalCacheLocation: Path): Path
+  protected def exportCacheTaskImpl(setup: CacheSetup,
+                                    result: CompilationResult,
+                                    globalCacheLocation: Path): ExportedCache
 
-  protected final def exportCacheTaskImpl(globalCacheLocation: Path)(setup: ExportCacheSetup): Path =
+  protected final def exportCacheTaskImpl(globalCacheLocation: Path)(setup: ExportCacheSetup): ExportedCache =
     exportCacheTaskImpl(setup.cacheSetup, setup.compilationResult, globalCacheLocation)
 
 
