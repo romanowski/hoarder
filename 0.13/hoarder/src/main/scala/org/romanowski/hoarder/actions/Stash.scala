@@ -15,56 +15,71 @@ import sbt._
 
 object Stash extends HoarderEngine {
 
-  private[romanowski] val parser = {
-    import sbt.complete.Parser._
-    import sbt.complete.Parsers._
+	def globalSettings = Seq(
+		defaultVersionLabel := "HEAD",
+		defaultProjectLabel := file(".").getAbsoluteFile.getParentFile.getName,
+		globalStashLocation := BuildPaths.getGlobalBase(state.value) / "sbt-stash"
+	)
 
-    Space.* ~> (Space ~> token(StringBasic, "<project-label>")).?
-      .flatMap { res =>
-        (Space.+ ~> token(StringBasic, "<version-label>")).?.map(res -> _)
-      } <~ Space.*
-  }
+	def settings = {
+		Seq(
+			stashImpl,
+			stashApplyImpl,
+			stashCleanImpl,
+			aggregate.in(stashKey) := true,
+			aggregate.in(stashApplyKey) := true
+		)
+	}
 
-  private def askForStashLocation = Def.inputTask {
-    val (providedLabel, providedVersion) = parser.parsed
+	private[romanowski] val parser = {
+		import sbt.complete.Parser._
+		import sbt.complete.Parsers._
 
-    val currentGlobalLabel = providedLabel.getOrElse(defaultProjectLabel.value)
-    val currentLocalLabel = providedVersion.getOrElse(defaultVersionLabel.value)
+		Space.* ~> (Space ~> token(StringBasic, "<project-label>")).?
+			.flatMap { res =>
+				(Space.+ ~> token(StringBasic, "<version-label>")).?.map(res -> _)
+			} <~ Space.*
+	}
 
-    val file = globalStashLocation.value / currentGlobalLabel / currentLocalLabel
-    file.toPath
-  }
+	private def askForStashLocation = Def.inputTask {
+		val (providedLabel, providedVersion) = parser.parsed
 
-  def globalSettings = Seq(
-    defaultVersionLabel := "HEAD",
-    defaultProjectLabel := file(".").getAbsoluteFile.getParentFile.getName,
-    globalStashLocation := BuildPaths.getGlobalBase(state.value) / "sbt-stash",
-    stashCleanKey := IO.delete(askForStashLocation.evaluated.toFile)
-  )
+		val currentGlobalLabel = providedLabel.getOrElse(defaultProjectLabel.value)
+		val currentLocalLabel = providedVersion.getOrElse(defaultVersionLabel.value)
 
-  def settings = {
-    Seq(
-      stashKey := {
-        val globalCache = askForStashLocation.evaluated.resolve(scalaBinaryVersion.value)
+		val file = globalStashLocation.value / currentGlobalLabel / currentLocalLabel
+		file.toPath
+	}
 
-        val exportedClasses = exportCacheSetups.value.map(exportCacheTaskImpl(globalCache))
+	private def stashApplyImpl = stashApplyKey := {
+		val globalCache = askForStashLocation.evaluated.resolve(scalaBinaryVersion.value)
 
-        streams.value.log.info(s"Project ${name.value} stashed to $globalCache using classes from $exportedClasses")
-      },
-      stashApplyKey := {
-        val globalCache = askForStashLocation.evaluated.resolve(scalaBinaryVersion.value)
+		val importedClasses = importCacheSetups.value.map { cache =>
+			importCacheTaskImpl(cache, globalCache)
+			cache.classesRoot
+		}
 
-        val importedClasses = importCacheSetups.value.map { cache =>
-          importCacheTaskImpl(cache, globalCache)
-          cache.classesRoot
-        }
+		streams.value.log.info(s"Stash for ${name.value} applied from $globalCache to $importedClasses")
+	}
 
-        streams.value.log.info(s"Stash for ${name.value} applied from $globalCache to $importedClasses")
-      },
-      aggregate.in(stashKey) := true,
-      aggregate.in(stashApplyKey) := true
-    )
-  }
+	private def stashCleanImpl = stashCleanKey := {
+		val stashRoot = askForStashLocation.evaluated.toFile
+		def isCacheRoot = stashRoot.isDirectory
+		val log = streams.value.log
+		if(stashRoot.exists()) {
+			if (isCacheRoot) IO.delete(stashRoot)
+			else log.error(s"$stashRoot does not seems to be valid stash location.")
+		} else log.warn(s"$stashRoot does not exisits")
+	}
+
+	private def stashImpl = stashKey := {
+		val globalCache = askForStashLocation.evaluated.resolve(scalaBinaryVersion.value)
+
+		val exportedClasses = exportCacheSetups.value.map(exportCacheTaskImpl(globalCache))
+
+		streams.value.log.info(
+			s"Project ${name.value} stashed to $globalCache using classes from $exportedClasses")
+	}
 }
 
 
