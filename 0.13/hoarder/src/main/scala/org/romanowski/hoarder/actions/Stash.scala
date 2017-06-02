@@ -26,6 +26,7 @@ object Stash extends HoarderEngine {
 			stashImpl,
 			stashApplyImpl,
 			stashCleanImpl,
+			aggregate.in(stashCleanKey) := false,
 			aggregate.in(stashKey) := true,
 			aggregate.in(stashApplyKey) := true
 		)

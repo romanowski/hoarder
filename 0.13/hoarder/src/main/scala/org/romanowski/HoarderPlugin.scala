@@ -21,97 +21,109 @@ import sbt._
 
 
 object HoarderKeys extends StashKeys with CachedCiKeys with CachedReleaseKeys {
-  private[romanowski] def internalTask[T: Manifest](name: String) =
-    TaskKey[T](s"hoarder:internal:$name", s"Internal hoarder task: $name. Please do not use.")
+	private[romanowski] def internalTask[T: Manifest](name: String) =
+		TaskKey[T](s"hoarder:internal:$name", s"Internal hoarder task: $name. Please do not use.")
 
 
-  case class CacheSetup(sourceRoots: Seq[File],
-                        classpath: Classpath,
-                        classesRoot: Path,
-                        projectRoot: Path,
-                        analysisFile: File,
-                        relativeCacheLocation: Path,
-                        overrideExistingCache: Boolean,
-                        cleanOutputMode: CleanOutputMode,
-                        zipAnalysisFile: Boolean,
-                        configuration: Configuration,
-                        name: String
-                       ) {
-    def cacheLocation(root: Path) = root.resolve(relativeCacheLocation)
-  }
+	case class CacheSetup(sourceRoots: Seq[File],
+	                      classpath: Classpath,
+	                      classesRoot: Path,
+	                      projectRoot: Path,
+	                      analysisFile: File,
+	                      relativeCacheLocation: Path,
+	                      overrideExistingCache: Boolean,
+	                      cleanOutputMode: CleanOutputMode,
+	                      zipAnalysisFile: Boolean,
+	                      configuration: Configuration,
+	                      name: String
+	                     ) {
+		def cacheLocation(root: Path) = root.resolve(relativeCacheLocation)
+	}
 
-  case class ExportCacheSetup(cacheSetup: CacheSetup, compilationResult: CompilationResult)
+	case class ExportCacheSetup(cacheSetup: CacheSetup, compilationResult: CompilationResult)
 
-  case class ExportedCache(analysis: Path, binaries: Option[Path])
+	case class ExportedCache(analysis: Path, binaries: Option[Path])
 
-  val cleanOutputMode = SettingKey[CleanOutputMode]("hoarder:cleanOutputMode", "What should be cleaned prior to cache extraction")
-  val zipAnalysisCache = SettingKey[Boolean]("hoarder:zipAnalysisFile", "Determines if analysis file will be zipped or not")
-  val overrideExistingCache = SettingKey[Boolean]("hoarder:overrideExistingCache", "Override existing stash")
-  val enabledConfigurations = SettingKey[Seq[Configuration]]("hoarder:enabledConfigurations",
-    "Configuration that hoarder will use")
+	val cleanOutputMode = SettingKey[CleanOutputMode]("hoarder:cleanOutputMode", "What should be cleaned prior to cache extraction")
+	val zipAnalysisCache = SettingKey[Boolean]("hoarder:zipAnalysisFile", "Determines if analysis file will be zipped or not")
+	val overrideExistingCache = SettingKey[Boolean]("hoarder:overrideExistingCache", "Override existing stash")
+	val enabledConfigurations = SettingKey[Seq[Configuration]]("hoarder:enabledConfigurations",
+		"Configuration that hoarder will use")
 
 
-  def withConfiguration(config: Configuration): Seq[Setting[_]] = HoarderPlugin.includeConfiguration(config)
+	def withConfiguration(config: Configuration): Seq[Setting[_]] = HoarderPlugin.includeConfiguration(config)
 
-  private[romanowski] val importCacheSetups = internalTask[Seq[CacheSetup]]("importCacheSetups")
-  private[romanowski] val exportCacheSetups = internalTask[Seq[ExportCacheSetup]]("exportCacheSetups")
-  private[romanowski] val perConfigurationSetup = internalTask[CacheSetup]("perConfigurationSetup")
-  private[romanowski] val perConfigurationExportSetup = internalTask[ExportCacheSetup]("perConfigurationExportSetup")
+	private[romanowski] val importCacheSetups = internalTask[Seq[CacheSetup]]("importCacheSetups")
+	private[romanowski] val exportCacheSetups = internalTask[Seq[ExportCacheSetup]]("exportCacheSetups")
+	private[romanowski] val perConfigurationSetup = internalTask[CacheSetup]("perConfigurationSetup")
+	private[romanowski] val perConfigurationExportSetup = internalTask[ExportCacheSetup]("perConfigurationExportSetup")
 }
 
 object HoarderPlugin extends AutoPlugin {
 
-  override def projectSettings = defaultPerProject ++ Stash.settings
+	override def projectSettings = defaultPerProject ++ Stash.settings
 
-  override def globalSettings: Seq[_root_.sbt.Def.Setting[_]] = Stash.globalSettings ++ defaultsGlobal
+	override def globalSettings: Seq[_root_.sbt.Def.Setting[_]] = Stash.globalSettings ++ defaultsGlobal
 
-  override def trigger: PluginTrigger = AllRequirements
+	override def trigger: PluginTrigger = AllRequirements
 
-  object autoImport {
-    val hoarder = HoarderKeys
-  }
+	object autoImport {
+		val hoarder = HoarderKeys
+	}
 
-  import HoarderKeys._
-
-
-  private[romanowski] def includeConfiguration(config: Configuration): Seq[Setting[_]] = {
-    inConfig(config)(Seq(
-      perConfigurationSetup := projectSetupFor.value,
-      perConfigurationExportSetup := ExportCacheSetup(perConfigurationSetup.value, compileIncremental.value)
-    )) ++ Seq(
-      importCacheSetups += perConfigurationSetup.in(config).value,
-      exportCacheSetups += perConfigurationExportSetup.in(config).value,
-      enabledConfigurations += config
-    )
-  }
-
-  private def projectSetupFor = Def.task[CacheSetup] {
-    CacheSetup(
-      sourceRoots = managedSourceDirectories.value ++ unmanagedSourceDirectories.value,
-      classpath = externalDependencyClasspath.value,
-      classesRoot = classDirectory.value.toPath,
-      projectRoot = baseDirectory.value.toPath,
-      analysisFile = (streams in compileIncSetup).value.cacheDirectory / compileAnalysisFilename.value,
-      relativeCacheLocation = Paths.get(name.value).resolve(configuration.value.name),
-      overrideExistingCache = overrideExistingCache.value,
-      cleanOutputMode = cleanOutputMode.value,
-      zipAnalysisFile = zipAnalysisCache.value,
-      configuration = configuration.value,
-      name = name.value
-    )
-  }
+	import HoarderKeys._
 
 
-  def defaultsGlobal = Seq(
-    cleanOutputMode := CleanClasses,
-    zipAnalysisCache := true,
-    overrideExistingCache := false,
-    importCacheSetups := Nil,
-    exportCacheSetups := Nil
-  )
+	private[romanowski] def includeConfiguration(config: Configuration): Seq[Setting[_]] = {
+		inConfig(config)(Seq(
+			perConfigurationSetup := projectSetupFor.value,
+			perConfigurationExportSetup := ExportCacheSetup(perConfigurationSetup.value, compileIncremental.value)
+		)) ++ Seq(
+			importCacheSetups += perConfigurationSetup.in(config).value,
+			exportCacheSetups += perConfigurationExportSetup.in(config).value,
+			enabledConfigurations += config
+		)
+	}
 
-  def defaultPerProject =
-    Seq(importCacheSetups := Nil, exportCacheSetups := Nil, enabledConfigurations := Nil) ++
-      includeConfiguration(Compile) ++
-      includeConfiguration(Test)
+	private def projectSetupFor = Def.task[CacheSetup] {
+		val relativeCacheLocation = {
+			val rootDir = Paths.get(".").toAbsolutePath.getParent
+			val baseDir = baseDirectory.value.toPath.toAbsolutePath
+			val relativePath =
+				if (rootDir == baseDir) Paths.get(name.value)
+				else {
+					assert(baseDir.startsWith(rootDir))
+					rootDir.relativize(baseDir)
+				}
+			relativePath.resolve(configuration.value.name)
+		}
+
+		CacheSetup(
+			sourceRoots = managedSourceDirectories.value ++ unmanagedSourceDirectories.value,
+			classpath = externalDependencyClasspath.value,
+			classesRoot = classDirectory.value.toPath,
+			projectRoot = baseDirectory.value.toPath,
+			analysisFile = (streams in compileIncSetup).value.cacheDirectory / compileAnalysisFilename.value,
+			relativeCacheLocation = relativeCacheLocation,
+			overrideExistingCache = overrideExistingCache.value,
+			cleanOutputMode = cleanOutputMode.value,
+			zipAnalysisFile = zipAnalysisCache.value,
+			configuration = configuration.value,
+			name = name.value
+		)
+	}
+
+
+	def defaultsGlobal = Seq(
+		cleanOutputMode := CleanClasses,
+		zipAnalysisCache := true,
+		overrideExistingCache := false,
+		importCacheSetups := Nil,
+		exportCacheSetups := Nil
+	)
+
+	def defaultPerProject =
+		Seq(importCacheSetups := Nil, exportCacheSetups := Nil, enabledConfigurations := Nil) ++
+			includeConfiguration(Compile) ++
+			includeConfiguration(Test)
 }
