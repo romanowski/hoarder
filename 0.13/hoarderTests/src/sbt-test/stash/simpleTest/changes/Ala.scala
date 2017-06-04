@@ -1,0 +1,3 @@
+class Ala
+
+object Ala

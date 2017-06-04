@@ -4,4 +4,6 @@ $ touch .cached-compilation
 > stashApply
 $ touch .cached-compilation-done
 > testCacheImport
-# TODO add incremental recompile
+> testIncCompilation
+$ copy-file changes/Ala.scala src/main/scala/Ala.scala
+> testIncCompilation Ala
