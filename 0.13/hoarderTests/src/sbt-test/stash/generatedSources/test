@@ -1,0 +1,6 @@
+> stash
+$ touch .cached-compilation
+> clean
+> stashApply
+$ touch .cached-compilation-done
+> testCacheImport

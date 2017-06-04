@@ -4,7 +4,7 @@
  * This software is released under the terms written in LICENSE.
  */
 
-package sbt.internal.inc
+package org.romanowski.hoarder.core
 
 import java.io.File
 
@@ -12,6 +12,7 @@ import sbt.Hash
 import sbt.IO
 import sbt.inc.Hash
 import sbt.inc.Stamp
+import sbt.internal.inc.ContextAwareMapper
 
 object LineEndingAgnosticSources {
 

@@ -25,7 +25,10 @@ object HoarderKeys extends StashKeys with CachedCiKeys with CachedReleaseKeys {
 		TaskKey[T](s"hoarder:internal:$name", s"Internal hoarder task: $name. Please do not use.")
 
 
-	case class CacheSetup(sourceRoots: Seq[File],
+	// TODO we may still misss some sources directories
+	// Find better way for finding source dir roots
+	case class CacheSetup(allSources: Seq[File],
+		                    sourceRoots: Seq[File],
 	                      classpath: Classpath,
 	                      classesRoot: Path,
 	                      projectRoot: Path,
@@ -99,7 +102,8 @@ object HoarderPlugin extends AutoPlugin {
 		}
 
 		CacheSetup(
-			sourceRoots = managedSourceDirectories.value ++ unmanagedSourceDirectories.value,
+			allSources = sources.value,
+			sourceRoots = sourceDirectories.value,
 			classpath = externalDependencyClasspath.value,
 			classesRoot = classDirectory.value.toPath,
 			projectRoot = baseDirectory.value.toPath,

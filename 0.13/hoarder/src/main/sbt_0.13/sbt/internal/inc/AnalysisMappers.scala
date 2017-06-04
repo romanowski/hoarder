@@ -26,27 +26,21 @@ object Mapper {
   }
 
   private val Regexp = s"#(\\d+)#(.+)".r
+  private def asNth(n: Int, v: Any) = s"#$n#$v"
 
-  def multipleRoots(roots: Seq[Path], default: Path) = {
+  def multipleRoots(roots: Seq[Path]) = {
     def write(f: File): String = {
       val path = f.toPath
-      val header = roots.zipWithIndex.collectFirst {
+      val fromSourceRoots = roots.zipWithIndex.collectFirst {
         case (root, nr) if path.startsWith(root) =>
-          s"#$nr#${root.relativize(path)}"
+          asNth(nr, root.relativize(path))
       }
-      header.getOrElse {
-        if (path.startsWith(default)) s"$header${default.relativize(path)}"
-        else FormatCommons.fileToString(f)
-      }
+      fromSourceRoots.getOrElse(FormatCommons.fileToString(f))
     }
 
     def read(s: String): File = s match {
       case Regexp(nr, path) if nr.toInt < roots.size =>
         roots(nr.toInt).resolve(path).toFile
-      case Regexp(_, path) =>
-        default.resolve(path).toFile
-      case path if s.startsWith(header) =>
-        default.resolve(path.drop(header.size)).toFile
       case _ => FormatCommons.stringToFile(s)
     }
 
@@ -98,8 +92,7 @@ trait AnalysisMappers {
 
   val binaryStampMapper: ContextAwareMapper[File, Stamp] = Mapper.forStamp
   val productStampMapper: ContextAwareMapper[File, Stamp] = Mapper.forStamp
-  val sourceStampMapper: ContextAwareMapper[File, Stamp] = LineEndingAgnosticSources.mapper
-
+  val sourceStampMapper: ContextAwareMapper[File, Stamp] = Mapper.forStamp
 }
 
 object AnalysisMappers {
