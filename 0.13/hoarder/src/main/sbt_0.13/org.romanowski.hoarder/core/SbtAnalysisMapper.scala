@@ -79,10 +79,13 @@ class SbtAnalysisMapper(sbtOutput: Path,
   )
 
   override val outputDirMapper: Mapper[File] = Mapper.relativizeFile(sbtOutput)
-  override val sourceDirMapper: Mapper[File] = Mapper.multipleRoots(sourceRoots, projectRoot)
+  override val sourceDirMapper: Mapper[File] = Mapper.multipleRoots(sourceRoots :+ projectRoot)
   override val sourceMapper: Mapper[File] = sourceDirMapper
   override val productMapper: Mapper[File] = Mapper.relativizeFile(sbtOutput)
   override val binaryMapper: Mapper[File] = Mapper(readDescriptor, writeDescriptor)
+
+  override val sourceStampMapper: ContextAwareMapper[File, Stamp] =
+    LineEndingAgnosticSources.mapper
   override val binaryStampMapper: ContextAwareMapper[File, Stamp] =
     Mapper.updateModificationDateFileMapper(binaryMapper)
   override val productStampMapper: ContextAwareMapper[File, Stamp] =
