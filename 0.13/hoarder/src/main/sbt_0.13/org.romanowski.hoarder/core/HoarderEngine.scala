@@ -26,6 +26,8 @@ import sbt.inc.MappableFormat
 import sbt.internal.inc.AnalysisMappers
 import xsbti.compile.SingleOutput
 
+import scala.util.control.NonFatal
+
 
 class HoarderEngine extends HoarderEngineCommon {
 
@@ -133,6 +135,11 @@ class HoarderEngine extends HoarderEngineCommon {
     val analysisReader = Files.newBufferedReader(analysisPath, charset)
     val (analysis, setup) = try {
       new MappableFormat(mapper).read(analysisReader)
+    } catch {
+      case NonFatal(e) =>
+        val lastLines = Files.readAllLines(analysisPath, charset).toArray().takeRight(10).mkString("\n\t")
+        throw new RuntimeException(
+          s"Error when reading from $analysisPath. Last 10 lines:\n\t$lastLines\nException: ", e)
     } finally analysisReader.close()
 
     val store = MixedAnalyzingCompiler.staticCachedStore(cacheSetup.analysisFile)

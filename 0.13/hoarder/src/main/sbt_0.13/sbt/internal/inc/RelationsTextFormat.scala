@@ -7,6 +7,8 @@ import java.io.Writer
 import sbt.Relation
 import sbt.internal.inc._
 
+import scala.util.control.NonFatal
+
 
 trait RelationsTextFormat extends FormatCommons {
   def mappers: AnalysisMappers
@@ -75,7 +77,7 @@ trait RelationsTextFormat extends FormatCommons {
     }
 
     def read(in: BufferedReader, nameHashing: Boolean): Relations = {
-      def readRelation[B](relDesc: Descriptor[B]): Relation[File, B] = {
+      def readRelation[B](relDesc: Descriptor[B]): Relation[File, B] = try {
         val expectedHeader = relDesc.header
         val items = readPairs(in)(expectedHeader, relDesc.keyMapper.read, relDesc.valueMapper.read).toIterator
         // Reconstruct the forward map. This is more efficient than Relation.empty ++ items.
@@ -94,6 +96,9 @@ trait RelationsTextFormat extends FormatCommons {
         }
         if (currentItem != null) closeEntry()
         Relation.reconstruct(forward.toMap)
+      } catch {
+        case NonFatal(e) =>
+          throw new RuntimeException(s"Exception when reading ${relDesc.header}.", e)
       }
 
       val relations = allRelations(nameHashing).map(rd => readRelation(rd))
