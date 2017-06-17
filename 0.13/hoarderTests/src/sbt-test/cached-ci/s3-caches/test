@@ -1,0 +1,10 @@
+# export=true use=true
+$ touch .shouldUseCache
+$ touch .shouldPublishCaches
+# Generate cache
+> postBuild
+# Apply cache
+> clean
+> preBuild
+> testCacheImport
+> clean
