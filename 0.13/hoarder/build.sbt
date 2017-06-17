@@ -1,13 +1,5 @@
 name := "hoarder"
 
-version := "1.0.1-SNAPSHOT"
-
-scalaVersion := "2.10.6"
-
-sbtPlugin := true
-
-organization := "com.github.romanowski"
-
 (unmanagedSourceDirectories in Compile) += baseDirectory.value / "src" / "main" / "sbt_0.13"
 (unmanagedSourceDirectories in Test) += baseDirectory.value / "src" / "test" / "sbt_0.13"
 
