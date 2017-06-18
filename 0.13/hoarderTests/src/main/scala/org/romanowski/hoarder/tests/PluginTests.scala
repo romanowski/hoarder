@@ -18,7 +18,6 @@ object PluginTests extends AutoPlugin {
       testCacheImportKey := streams.value.log.success(s"Testing for ${name.value}"),
       scalaVersion := "2.11.8"
     ) ++ configurations.flatMap(testConfiguration)
-
   }
 
   import autoImport._
@@ -124,5 +123,4 @@ object PluginTests extends AutoPlugin {
 
     log.success(s"Only $recompiled was recompiled")
   }
-
 }

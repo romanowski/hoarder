@@ -20,6 +20,7 @@ env:
   matrix:
    - scriptName=integrationTest
    - scriptName=sbtTests-0.13
+   - scriptName=s3-integration
 #   Uncomment below after new release of sbt
 #   - scriptName=sbtTests-1.0
 

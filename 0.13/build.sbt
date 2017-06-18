@@ -1,6 +1,7 @@
+version.in(Global) := "1.0.1-SNAPSHOT"
 
 def commonSettings =  Seq(
-  version := "1.0.1-SNAPSHOT",
+  version := version.in(Global).value,
   scalaVersion := "2.10.6",
   sbtPlugin := true,
   organization := "com.github.romanowski",

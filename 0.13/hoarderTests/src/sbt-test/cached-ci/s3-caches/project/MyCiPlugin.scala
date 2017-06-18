@@ -4,13 +4,4 @@
  * This software is released under the terms written in LICENSE.
  */
 
-import java.io.File
-
-object MyCiSetup extends org.romanowski.hoarder.amazon.S3TravisPRValidation("hoarder-s3-scripted-test") {
-  override def shouldPublishCaches(): Boolean = new File(".shouldPublishCaches").exists()
-
-  override def shouldUseCache(): Boolean = new File(".shouldUseCache").exists()
-}
-
-
-object MyCiPlugin extends org.romanowski.hoarder.actions.CachedCI.PluginBase(MyCiSetup)
+object MyS3TestPlugin extends org.romanowski.hoarder.tests.S3TestPlugin
