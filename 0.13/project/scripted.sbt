@@ -1,1 +1,1 @@
-libraryDependencies +=  "org.scala-sbt" % "scripted-plugin" % sbtVersion.value
+//uncomment then will be supported libraryDependencies +=  "org.scala-sbt" %% "scripted-plugin" % sbtVersion.value

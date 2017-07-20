@@ -4,7 +4,6 @@
     throw new RuntimeException("""|The system property 'plugin.version' is not defined.
                                  |Specify this property using the scriptedLaunchOpts -D.""".stripMargin)
   else {
-    addSbtPlugin("com.github.romanowski" % "hoarder" % pluginVersion)
     addSbtPlugin("com.github.romanowski" % "hoarder-tests" % pluginVersion)
   }
 }

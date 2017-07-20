@@ -1,12 +1,13 @@
-def dependOnSbt(sbtVersion: String ) = Seq(
-  libraryDependencies += "org.scala-sbt" % "sbt" % sbtVersion,
-  scriptedSbt := sbtVersion
+import HoarderSettings.autoimport._
 
-)
+version.in(Global) := "1.0.1-SNAPSHOT"
+crossSbtVersions := Seq("0.13.15", "1.0.0-RC2")
 
-def commonSettings =  Seq(
-  version := "1.0.1-SNAPSHOT",
-  scalaVersion := "2.10.6",
+def commonSettings(isSbtPlugin: Boolean = true) =  Seq(
+  (unmanagedSourceDirectories in Compile) += baseDirectory.value / "src" / "main" / s"sbt_${sbtPrefix.value}",
+  (unmanagedSourceDirectories in Test) += baseDirectory.value / "src" / "test" / s"sbt_${sbtPrefix.value}",
+  version := version.in(Global).value,
+  sbtPlugin := isSbtPlugin,
   organization := "com.github.romanowski",
   publishMavenStyle := true,
   publishTo := {
@@ -31,19 +32,23 @@ def commonSettings =  Seq(
           <url>http://typosafe.pl</url>
         </developer>
       </developers>)
-) ++ dependOnSbt("0.13.15")
+)
 
-val hoarder = project.settings(commonSettings: _*)
+val hoarderCore = project.settings(commonSettings(isSbtPlugin = false))
 
-val hoarderAmazon = project.in(file("hoarder-amazon")).dependsOn(hoarder).settings(commonSettings: _*)
+val hoarder = project.settings(commonSettings()).dependsOn(hoarderCore)
+
+val hoarderAmazon = project.in(file("hoarder-amazon")).dependsOn(hoarder).settings(commonSettings())
 
 val hoarderTests = project.dependsOn(hoarderAmazon)
-  .settings(commonSettings: _*)
+  .settings(commonSettings())
   .settings(
     publishLocal := {
+      (publishLocal in hoarderCore).value
       (publishLocal in hoarder).value
       (publishLocal in hoarderAmazon).value
       publishLocal.value
     })
 
-val root = project aggregate(hoarder, hoarderTests, hoarderAmazon)
+val root = project aggregate(hoarderCore, hoarder, hoarderTests, hoarderAmazon)
+

@@ -16,8 +16,9 @@ object MyCiSetup extends org.romanowski.hoarder.actions.ci.DownloadableCacheSetu
   private val cache = new File(".hoadrder-cache")
 
   /** Loads cache to tmp directory */
-  def downloadCache(to: Path): Unit = {
+  def downloadCache(to: Path): Path = {
     IO.copyDirectory(cache, to.toFile)
+    cache.toPath
   }
 
   /** Stores cache from tmp directory */

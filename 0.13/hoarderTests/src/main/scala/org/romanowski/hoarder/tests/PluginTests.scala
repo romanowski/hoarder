@@ -7,6 +7,7 @@
 package org.romanowski
 package hoarder.tests
 
+import org.romanowski.hoarder.core.SbtTypes._
 import sbt.Keys._
 import sbt._
 import sbt.complete.Parser
@@ -18,7 +19,6 @@ object PluginTests extends AutoPlugin {
       testCacheImportKey := streams.value.log.success(s"Testing for ${name.value}"),
       scalaVersion := "2.11.8"
     ) ++ configurations.flatMap(testConfiguration)
-
   }
 
   import autoImport._
@@ -30,15 +30,20 @@ object PluginTests extends AutoPlugin {
       testIncCompilation, allCompilationKey := Nil) ++
       testRecompilationIn(Compile, Test)
 
-  private val runTestKey = TaskKey[Unit]("hoarder:test:runTest")
+  private val runTestKey = TaskKey[Unit]("hoarder:test:runTest-TODO-remove??")
   private val testCacheImportKey = TaskKey[Unit]("testCacheImport")
-  private val allCompilationKey = TaskKey[Seq[Compiler.CompileResult]]("test:allIncCompileResult")
+  private val allCompilationKey = TaskKey[Seq[CompilationResult]]("test:allIncCompileResult")
 
-  def cannotRecompile = file(".cached-compilation").exists()
+  private def cannotRecompileFile = file(".cached-compilation")
+  def cannotRecompile = cannotRecompileFile.exists()
+  private val shouldRestoreCannotRecompileFile = Def.task[Boolean]{
+    if(canNoOp) cannotRecompileFile.delete() else false
+  }
 
-  def canNoOp = file(".cached-compilation-done").exists()
+  private def noOpFile = file(".cached-compilation-done")
+  private def canNoOp = noOpFile.exists()
 
-  private def assertNothingRecompiled(result: Compiler.CompileResult): Compiler.CompileResult = {
+  private def assertNothingRecompiled(result: CompilationResult): CompilationResult = {
     if (cannotRecompile) {
       if (canNoOp) {
         if (result.hasModified) throw new RuntimeException(s"Compilation wasn't no-op in ${result.setup.output}")
@@ -49,15 +54,16 @@ object PluginTests extends AutoPlugin {
 
   private def runTest = Def.task {
     val classesDir = classDirectory.value
+    val log = streams.value.log
 
-    if (sources.value.nonEmpty) {
-      assertNothingRecompiled(manipulateBytecode.value)
+    assertNothingRecompiled(manipulateBytecode.value)
 
-      val allClasses = (classesDir ** "*.class").get
-      assert(allClasses.nonEmpty, s"No classes present in $classesDir!")
+    val allClasses = (classesDir ** "*.class").get
+    val allSources = sources.value
+    assert(allClasses.nonEmpty || allSources.isEmpty, s"No classes present in $classesDir!")
 
-      streams.value.log.success(s"Nothing modified in $classesDir")
-    }
+    log.success(s"Nothing modified in $classesDir")
+
   }
 
   def perConfigSettings = Seq(
@@ -95,34 +101,34 @@ object PluginTests extends AutoPlugin {
     }
   }
 
-  private val fileNameParser: Parser[Seq[String]] = {
+  private val fileNameParser: Parser[Set[String]] = {
     import sbt.complete.Parser._
     import sbt.complete.Parsers._
 
-    (Space.+ ~> StringBasic).map(v => s"$v.scala").*
+    (Space.+ ~> StringBasic).map(v => s"$v.scala").*.map(_.toSet)
   }
+
+  private val testIncCompilationFiles = Def.inputTask {
+    fileNameParser.parsed
+  }
+
 
 
   def testIncCompilation = InputKey[Unit]("testIncCompilation") := {
-    val filesNames = fileNameParser.parsed.toSet
-    val log = streams.value.log
-
-    val recompiled = (for {
-      date <- task(System.currentTimeMillis())
-      results <- allCompilationKey.taskValue
-      log <- streams.taskValue
+     (for {
+       shouldRestoreNoOp <- shouldRestoreCannotRecompileFile.taskValue
+       filesNames <- testIncCompilationFiles.parsed
+       streams <- streams.taskValue
+       date <- task(System.currentTimeMillis())
+       results <- allCompilationKey.taskValue
     } yield {
-      results.flatMap {
-        _.analysis.apis.internal.collect {
-          case (file, source) if source.compilation.startTime > date =>
-            file.getName
-        }
-      }
-    }).value.toSet
+       val recompiled = results.flatMap(_.compiledAfter(date)).toSet
+      assert(recompiled == filesNames, s"Expected $filesNames to be recompiled but got: $recompiled instead.")
 
-    assert(recompiled == filesNames, s"Expected $filesNames to be recompiled but got: $recompiled instead.")
+       streams.log.success(s"Only $recompiled was recompiled")
+       if(shouldRestoreNoOp) IO.touch(cannotRecompileFile)
 
-    log.success(s"Only $recompiled was recompiled")
+      recompiled
+    }).value
   }
-
 }

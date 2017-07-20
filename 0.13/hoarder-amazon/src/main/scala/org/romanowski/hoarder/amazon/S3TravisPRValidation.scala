@@ -1,5 +1,6 @@
 package org.romanowski.hoarder.amazon
 
-import org.romanowski.hoarder.actions.ci.TravisPRValidation
+import org.romanowski.hoarder.actions.ci.TravisFlow
 
-class S3TravisPRValidation(override val bucketName: String) extends TravisPRValidation with S3Caches
+case class S3TravisPRValidation(override val bucketName: String,
+                                override val prefix: String = "") extends TravisFlow with S3Caches

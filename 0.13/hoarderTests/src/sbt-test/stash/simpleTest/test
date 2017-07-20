@@ -1,3 +1,4 @@
+> "show scalaVersion"
 > stash
 $ touch .cached-compilation
 > clean

@@ -16,6 +16,7 @@ import org.romanowski.hoarder.core.SbtTypes.CompilationResult
 import sbt.Def._
 import sbt.Keys._
 import sbt._
+import org.romanowski.hoarder.core.SbtTypes._
 
 object CachedRelease extends HoarderEngine {
 
@@ -37,13 +38,12 @@ object CachedRelease extends HoarderEngine {
 
   private def setupHoarderArtifacts = hoarderArtifacts := enabledConfigurations.value.map {
     configuration =>
-      configuration -> Artifact(
+      configuration -> createArtifact(
         name = name.value,
         `type` = hoarderType(configuration),
         extension = "zip",
         classifier = Option(hoarderType(configuration)),
-        configurations = Seq(configuration),
-        url = None
+        configurations = Seq(configuration)
       )
   }(collection.breakOut)
 
@@ -74,7 +74,7 @@ object CachedRelease extends HoarderEngine {
 
     override def apply(cacheSetup: CacheSetup): Unit = {
       val configurationName = cacheSetup.configuration.name
-      val configurationDesc = baseModule.copy(configurations = Option(s"$configurationName->$configurationName"))
+      val configurationDesc = baseModule.withConfigurations(Option(s"$configurationName->$configurationName"))
       val resolvedArtifacts = coursierResolver.resolve(configurationDesc)
 
       def artifactFor(artifactType: String): Option[URL] = {
@@ -110,7 +110,7 @@ object CachedRelease extends HoarderEngine {
     val sbtResolvers = publishTo.value.toSeq ++ externalResolvers.value
 
     val loadCache = new Loader(
-      baseModule = projectID.value.intransitive().copy(revision = version, explicitArtifacts = Nil),
+      baseModule = projectID.value.intransitive().withRevision(version).withExplicitArtifacts(Nil),
       coursierResolver = CoursierResolver(streams.value.log, scalaVersion.value, scalaBinaryVersion.value, sbtResolvers),
       streams = streams.value,
       failOnMissing = failOnMissing.value

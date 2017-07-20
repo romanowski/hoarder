@@ -10,10 +10,11 @@ package ci
 import java.nio.file.Path
 import java.nio.file.Paths
 
+import org.romanowski.hoarder.actions.CachedCI.CacheProgress
 import sbt.IO
 
-case class TravisPRValidation(cacheDirectory: Path = TravisPRValidation.defaultLocation,
-                              cachedBranches: Set[String] = Set.empty) extends CachedCI.Setup {
+trait TravisFlow { self: CachedCI.Setup =>
+  protected def cachedBranches: Set[String] = Set.empty
 
   private def currentBranch = sys.env.get("TRAVIS_BRANCH")
 
@@ -24,16 +25,24 @@ case class TravisPRValidation(cacheDirectory: Path = TravisPRValidation.defaultL
 
   override def shouldUseCache(): Boolean = sys.env.get("TRAVIS_EVENT_TYPE") == Some("pull_request") && supportedBranch
 
+}
+
+
+case class TravisPRValidation(cacheDirectory: Path = TravisPRValidation.defaultLocation,
+                              override val cachedBranches: Set[String] = Set.empty) extends CachedCI.Setup with TravisFlow {
   override def invalidateCache(): Unit = IO.delete(cacheDirectory.toFile)
 
-  override def exportCachePart(op: (Path) => Unit): Unit = op(cacheDirectory)
+  private val NoopProgress = new CacheProgress {
+    def done(): Unit = {}
 
-  override def loadCachePart(op: (Path) => Unit): Unit =
-    op(cacheDirectory)
+    override def nextPart[T](op: (Path) => T): T = op(cacheDirectory)
+  }
 
-  override def exportCache(op: (Path) => Unit): Unit = op(cacheDirectory)
+  /** `doExportCache` will export cache for whole project to provided path */
+  override def exportCache(): CacheProgress = NoopProgress
 
-  override def loadCache(op: (Path) => Unit): Unit = op(cacheDirectory)
+  /** `doLoadCache` will load cache for whole project from provided path */
+  override def loadCache(): CacheProgress = NoopProgress
 }
 
 object TravisPRValidation {

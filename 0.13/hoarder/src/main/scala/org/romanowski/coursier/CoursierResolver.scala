@@ -42,7 +42,7 @@ case class CoursierResolver(log: Logger, scalaVersion: String, scalaBinaryVersio
 
     val fetch = Fetch.from(repositories, Cache.fetch())
 
-    val resolution = start.process.run(fetch).run
+    val resolution = start.process.run(fetch).unsafePerformSync
 
     val resolved = resolution.dependencyArtifacts.map {
       case (artifactDependency, artifact) =>

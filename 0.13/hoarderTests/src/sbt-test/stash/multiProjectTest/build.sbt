@@ -1,8 +1,6 @@
-import sbt.dsl._
-
 lazy val baseProject = project
-lazy val finalProject = project dependsOn(leafProject)
-lazy val leafProject = project  dependsOn(baseProject)
+lazy val finalProject = project.dependsOn(leafProject)
+lazy val leafProject = project.dependsOn(baseProject)
 
 lazy val nested = project.in(file("js") / "baseProject").settings(
 	name := "baseProject"

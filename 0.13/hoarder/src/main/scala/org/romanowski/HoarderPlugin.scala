@@ -89,11 +89,12 @@ object HoarderPlugin extends AutoPlugin {
 	}
 
 	private def projectSetupFor = Def.task[CacheSetup] {
+		val projectName = name.value
 		val relativeCacheLocation = {
 			val rootDir = Paths.get(".").toAbsolutePath.getParent
 			val baseDir = baseDirectory.value.toPath.toAbsolutePath
 			val relativePath =
-				if (rootDir == baseDir) Paths.get(name.value)
+				if (rootDir == baseDir) Paths.get(projectName)
 				else {
 					assert(baseDir.startsWith(rootDir))
 					rootDir.relativize(baseDir)
