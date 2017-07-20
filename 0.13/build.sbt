@@ -2,9 +2,9 @@
 def commonSettings =  Seq(
   version := "1.0.1-SNAPSHOT",
   scalaVersion := "2.10.6",
-  sbtPlugin := true,
   organization := "com.github.romanowski",
   publishMavenStyle := true,
+  sbtPlugin := true,
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
     if (isSnapshot.value)

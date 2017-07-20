@@ -1,7 +1,5 @@
 name := "hoarder-tests"
 
-ScriptedPlugin.scriptedSettings
-
 scriptedLaunchOpts := { scriptedLaunchOpts.value ++
   Seq(
     "-Xmx1024M",
