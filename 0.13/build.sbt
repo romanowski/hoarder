@@ -1,14 +1,10 @@
-def dependOnSbt(sbtVersion: String ) = Seq(
-  libraryDependencies += "org.scala-sbt" % "sbt" % sbtVersion,
-  scriptedSbt := sbtVersion
-
-)
 
 def commonSettings =  Seq(
   version := "1.0.1-SNAPSHOT",
   scalaVersion := "2.10.6",
   organization := "com.github.romanowski",
   publishMavenStyle := true,
+  sbtPlugin := true,
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
     if (isSnapshot.value)
@@ -31,7 +27,7 @@ def commonSettings =  Seq(
           <url>http://typosafe.pl</url>
         </developer>
       </developers>)
-) ++ dependOnSbt("0.13.15")
+)
 
 val hoarder = project.settings(commonSettings: _*)
 
