@@ -4,5 +4,5 @@ import xsbti.compile.analysis._
 import xsbti.compile._
 
 trait CacheProvider {
-  def findCache(previous: Option[AnalysisContents]): Option[CompilationCache]
+  def findCache(previous: Option[AnalysisContents]): Option[FileBasedCompilationCache]
 }

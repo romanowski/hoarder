@@ -16,20 +16,15 @@ import sbt.internal.inc.ContextAwareMapper
 
 object LineEndingAgnosticSources {
 
-  def lineAgnosticHash(file: File): Stamp = {
-    val linuxEndings = IO.readLines(file).mkString("\n")
-    new Hash(Hash(linuxEndings))
-  }
-
   def loadCacheAndCompare(file: File, serialized: String): Stamp = {
     val loadedStamp = Stamp.fromString(serialized)
 
-    if (file.exists() && lineAgnosticHash(file) == loadedStamp) new Hash(Hash.apply(file))
+    if (file.exists() && LineAgnosticStamp(file) == loadedStamp) new Hash(Hash.apply(file))
     else loadedStamp
   }
 
   val mapper: ContextAwareMapper[File, Stamp] = ContextAwareMapper(
     read = loadCacheAndCompare,
-    write = (file, stamp) => if (file.exists()) lineAgnosticHash(file).toString() else stamp.toString()
+    write = (file, stamp) => if (file.exists()) LineAgnosticStamp(file).toString() else stamp.toString()
   )
 }

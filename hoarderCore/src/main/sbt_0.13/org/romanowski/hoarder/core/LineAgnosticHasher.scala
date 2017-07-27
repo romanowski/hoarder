@@ -2,14 +2,15 @@ package org.romanowski.hoarder.core
 
 import java.io.File
 
-import sbt.io.IO
-import sbt.StampBridge
-import xsbti.compile.analysis.Stamp
+import sbt.Hash
+import sbt.IO
+import sbt.inc.Hash
+import sbt.inc.Stamp
 
 
 object LineAgnosticStamp {
   def apply(file: File): Stamp = {
     val linuxEndings = IO.readLines(file).mkString("\n")
-    StampBridge.hashFileContent(linuxEndings)
+    new Hash(Hash(linuxEndings))
   }
 }

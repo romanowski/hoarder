@@ -11,12 +11,15 @@ import java.nio.file.Path
 import org.romanowski.HoarderKeys._
 import org.romanowski.HoarderKeys.failOnMissing
 import org.romanowski.coursier.CoursierResolver
+import org.romanowski.hoarder.core.ExportedCache
+import org.romanowski.hoarder.core.HoarderCompilationCache
 import org.romanowski.hoarder.core.HoarderEngine
 import org.romanowski.hoarder.core.SbtTypes.CompilationResult
 import sbt.Def._
 import sbt.Keys._
 import sbt._
 import org.romanowski.hoarder.core.SbtTypes._
+import xsbti.compile.AnalysisContents
 
 object CachedRelease extends HoarderEngine {
 
@@ -28,9 +31,11 @@ object CachedRelease extends HoarderEngine {
     failOnMissing.in(ThisBuild) := true
   )
 
-  override protected def exportBinaries(cacheLocation: Path,
-                                        cacheSetup: CacheSetup,
-                                        result: CompilationResult): Option[Path] = None
+
+  override protected def compilationCache(cacheSetup: CacheSetup, globalCacheLocation: Path) =
+    new HoarderCompilationCache(cacheSetup, globalCacheLocation){
+      override protected def exportBinaries(from: AnalysisContents): Unit = {}
+    }
 
   private val hoarderArtifacts = SettingKey[Map[Configuration, Artifact]]("hoarder:private:artifacts", "Internal")
 

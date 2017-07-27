@@ -13,6 +13,7 @@ import org.romanowski.hoarder.actions.CachedCiKeys
 import org.romanowski.hoarder.actions.CachedReleaseKeys
 import org.romanowski.hoarder.actions.Stash
 import org.romanowski.hoarder.actions.StashKeys
+import org.romanowski.hoarder.core.CleanOutputMode
 import org.romanowski.hoarder.core.CleanClasses
 import org.romanowski.hoarder.core.CleanOutputMode
 import org.romanowski.hoarder.core.SbtTypes.CompilationResult
@@ -45,11 +46,9 @@ object HoarderKeys extends StashKeys with CachedCiKeys with CachedReleaseKeys {
 
 	case class ExportCacheSetup(cacheSetup: CacheSetup, compilationResult: CompilationResult)
 
-	case class ExportedCache(analysis: Path, binaries: Option[Path])
-
-	val cleanOutputMode = SettingKey[CleanOutputMode]("hoarder:cleanOutputMode", "What should be cleaned prior to cache extraction")
-	val zipAnalysisCache = SettingKey[Boolean]("hoarder:zipAnalysisFile", "Determines if analysis file will be zipped or not")
-	val overrideExistingCache = SettingKey[Boolean]("hoarder:overrideExistingCache", "Override existing stash")
+	val cleanOutputMode = SettingKey[CleanOutputMode]("hoarder-cleanOutputMode", "What should be cleaned prior to cache extraction")
+	val zipAnalysisCache = SettingKey[Boolean]("hoarder-zipAnalysisFile", "Determines if analysis file will be zipped or not")
+	val overrideExistingCache = SettingKey[Boolean]("overrideExistingCache", "Override existing stash")
 	val enabledConfigurations = SettingKey[Seq[Configuration]]("hoarder:enabledConfigurations",
 		"Configuration that hoarder will use")
 

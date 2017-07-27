@@ -5,6 +5,7 @@ import sbt.File
 import sbt.IO.transfer
 import java.net.URL
 import java.nio.file.Paths
+import java.util.Optional
 
 import sbt.io.Using
 import xsbti.compile._
@@ -13,7 +14,7 @@ import sbt.librarymanagement.ConfigRef
 
 object SbtTypes {
   type CompilationResult = xsbti.compile.CompileResult
-  type PreviousCompilationResult = PreviousResult
+  type PreviousCompilationResult = xsbti.compile.PreviousResult
 
   implicit class IOOps(io: sbt.io.IO.type){
     def download(url: URL, to: File) =
@@ -31,7 +32,7 @@ object SbtTypes {
 
   def fail(m: String) = throw new RuntimeException(m)
 
-  implicit class CompilationResultOpts(results: CompilationResult){
+  implicit class CompilationResultOps(results: CompilationResult){
     def asAnalysisContents: AnalysisContents = AnalysisContents.create(results.analysis(), results.setup())
 
 
@@ -46,4 +47,10 @@ object SbtTypes {
       }
     }
   }
+
+  implicit class AnalysisContentsOps(content: AnalysisContents){
+    def asPreviousResults: PreviousCompilationResult =
+      PreviousResult.create(Optional.of(content.getAnalysis()), Optional.of(content.getMiniSetup()))
+  }
+
 }

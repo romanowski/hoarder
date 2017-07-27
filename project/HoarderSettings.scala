@@ -7,6 +7,15 @@ object HoarderSettings extends AutoPlugin {
 
   object autoimport {
     val sbtPrefix = SettingKey[String]("hoarder:sbtPrefix")
+
+    def cross[T](`0.13`: T, `1.0`: T) = Def.setting {
+      sbtPrefix.value match {
+        case "0.13" =>
+          `0.13`
+        case "1.0" =>
+          `1.0`
+      }
+    }
   }
 
   import autoimport._
