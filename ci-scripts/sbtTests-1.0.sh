@@ -1,4 +1,3 @@
 set -o xtrace && \
-    cd 1.0 && \
-    sbt test && \
-    sbt scripted
+    sbt ";^^ 1.0.0-RC2; test" && \
+    sbt ";^^ 1.0.0-RC2; scripted"

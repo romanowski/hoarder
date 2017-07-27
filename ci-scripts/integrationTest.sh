@@ -1,3 +1,4 @@
+#TODO - I need to cross compile this!
 set -o xtrace && \
     cd 0.13 && \
     sbt "set version.in(hoarder) :=\"1.0-for-test\"" hoarder/publishLocal && \
