@@ -115,7 +115,7 @@ object CachedRelease extends HoarderEngine {
     val sbtResolvers = publishTo.value.toSeq ++ externalResolvers.value
 
     val loadCache = new Loader(
-      baseModule = projectID.value.intransitive().withRevision(version).withExplicitArtifacts(Nil),
+      baseModule = projectID.value.intransitive().withRevision(version).withExplicitArtifacts(Vector.empty),
       coursierResolver = CoursierResolver(streams.value.log, scalaVersion.value, scalaBinaryVersion.value, sbtResolvers),
       streams = streams.value,
       failOnMissing = failOnMissing.value

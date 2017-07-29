@@ -5,7 +5,7 @@ name := "hoarderCore"
 libraryDependencies += {
   sbtPrefix.value match {
     case "0.13" =>
-       "com.typesafe.sbt" % "incremental-compiler" % sbtVersion.in(pluginCrossBuild).value
+      "com.typesafe.sbt" % "incremental-compiler" % sbtVersion.in(pluginCrossBuild).value
     case "1.0" =>
         "org.scala-sbt" %% "zinc" % "1.0.0-X20"
   }

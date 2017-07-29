@@ -1,7 +1,7 @@
 import HoarderSettings.autoimport._
 
 version.in(Global) := "1.0.1-SNAPSHOT"
-crossSbtVersions := Seq("0.13.16", "1.0.0-RC2")
+crossSbtVersions := Seq("0.13.16", "1.0.0-RC3")
 
 def commonSettings(isSbtPlugin: Boolean = true) =  Seq(
   (unmanagedSourceDirectories in Compile) += baseDirectory.value / "src" / "main" / s"sbt_${sbtPrefix.value}",
