@@ -93,58 +93,20 @@ case class SbtAnalysisMapper(sbtOutput: Path,
   private def updateModificationDate(f: File): Stamp =
     sbt.internal.inc.Stamper.forLastModified(f)
 
-  private def stringifyAttributes(from: Attributed[File]): Option[File] = for {
-    artifact <- from.get(artifact.key)
-    module <- from.get(moduleID.key)
-  } yield {
-    val str = Seq(module.organization,
-      module.revision,
-      module.name,
-      from.data.getName,
-      artifact.classifier.getOrElse("-"),
-      module.configurations.getOrElse("-"),
-      if (includeSize) from.data.length() else -1
-    ).mkString("#")
-    new File(str)
-  }
 
-  private def asJVMJar(filePath: Path): Option[File] = for {
-    javaHome <- Option(System.getProperty("java.home"))
-    javaHomePath = Paths.get(javaHome)
-    if filePath.startsWith(javaHomePath)
-    javaVersion <- Option(System.getProperty("java.specification.version"))
-    relativePath = javaHomePath.relativize(filePath)
-  } yield new File(s"##$javaVersion##$relativePath")
+  private lazy val cpMapper = new SbtClasspathMapper(projectRoot, classpath, includeSize)
 
   private def exportBinaryFile(f: File): File = {
-    classpath.find(_.data == f).flatMap(stringifyAttributes)
-      .orElse(asJVMJar(f.toPath))
-      .getOrElse(
+    cpMapper.write(f).map(s => new File(s)).getOrElse(
         if (f.toPath.startsWith(projectRoot)) projectRoot.relativize(f)
         else f
       )
   }
 
-  private def importBinaryFile(exportedFile: File): File = {
-    classpathDescriptors.getOrElse(exportedFile,
-      if (exportedFile.toPath.startsWith(headerPath)) projectRoot.derelativize(exportedFile)
-      else exportedFile
-    )
-  }
-
-  private lazy val jvmClasspath: Map[File, File] = if (ManagementFactory.getRuntimeMXBean.isBootClassPathSupported)
-    ManagementFactory.getRuntimeMXBean.getBootClassPath.split(File.pathSeparator).flatMap { s =>
-      val path = Paths.get(s)
-      val jvmJar = asJVMJar(path)
-      jvmJar.map(_ -> path.toFile)
-    }(collection.breakOut)
-  else Map.empty
-
-  private lazy val classpathDescriptors: Map[File, File] =
-    jvmClasspath ++ classpath.map(stringifyAttributes).zip(classpath).collect {
-      case (Some(k), attributted) => k -> attributted.data
-    }(collection.breakOut)
-
+  private def importBinaryFile(exportedFile: File): File = cpMapper.read(exportedFile.toString).getOrElse(
+    if (exportedFile.toPath.startsWith(headerPath)) projectRoot.derelativize(exportedFile)
+    else exportedFile
+  )
 
   private def readSourceStamp(file: File, loadedStamp: Stamp): Stamp = {
     if (file.exists() && LineAgnosticStamp(file) == loadedStamp) Stamper.forHash(file)

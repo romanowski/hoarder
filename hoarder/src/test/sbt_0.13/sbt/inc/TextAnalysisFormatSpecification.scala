@@ -9,6 +9,7 @@ import org.scalacheck.Prop._
 import org.scalacheck._
 import sbt.CompileOptions
 import sbt.CompileSetup
+import sbt.inc.hoarder._
 import xsbti.Problem
 import xsbti.compile._
 

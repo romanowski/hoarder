@@ -38,54 +38,18 @@ case class SbtAnalysisMapper(sbtOutput: Path,
       Mapper.updateModificationDateFileMapper(productMapper)
   }
 
-  private case class JarDescriptor(org: String, rev: String, name: String, fileName: String, cl: Option[String], configuration: Option[String])
-
   private val header = "##"
 
-  private def stringifyAttributes(from: Attributed[File]): Option[String] = for {
-    artifact <- from.get(artifact.key)
-    module <- from.get(moduleID.key)
-  } yield
-    Seq(module.organization,
-      module.revision,
-      module.name,
-      from.data.getName,
-      artifact.classifier.getOrElse("-"),
-      module.configurations.getOrElse("-"),
-      if (includeSize) from.data.length() else -1
-    ).mkString("#")
-
-  private def asJVMJar(filePath: Path): Option[String] = for {
-    javaHome <- Option(System.getProperty("java.home"))
-    javaHomePath = Paths.get(javaHome)
-    if filePath.startsWith(javaHomePath)
-    javaVersion <- Option(System.getProperty("java.specification.version"))
-    relativePath = javaHomePath.relativize(filePath)
-  } yield s"##$javaVersion##$relativePath"
+  private lazy val cpMapper = new SbtClasspathMapper(projectRoot, classpath, includeSize)
 
   private def writeDescriptor(f: File): String = {
-    classpath.find(_.data == f).flatMap(stringifyAttributes)
-      .orElse(asJVMJar(f.toPath))
-      .getOrElse(
+    cpMapper.write(f).getOrElse(
         if (f.toPath.startsWith(projectRoot)) s"$header${projectRoot.relativize(f.toPath).toString}"
         else FormatCommons.fileToString(f)
       )
   }
 
-  private lazy val jvmClasspath: Map[String, File] = if (ManagementFactory.getRuntimeMXBean.isBootClassPathSupported)
-    ManagementFactory.getRuntimeMXBean.getBootClassPath.split(File.pathSeparator).flatMap { s =>
-      val path = Paths.get(s)
-      val jvmJar = asJVMJar(path)
-      jvmJar.map(_ -> path.toFile)
-    }(collection.breakOut)
-  else Map.empty
-
-  private lazy val classpathDescriptors: Map[String, File] =
-    jvmClasspath ++ classpath.map(stringifyAttributes).zip(classpath).collect {
-      case (Some(k), attributted) => k -> attributted.data
-    }(collection.breakOut)
-
-  private def readDescriptor(s: String): File = classpathDescriptors.getOrElse(s,
+  private def readDescriptor(s: String): File = cpMapper.read(s).getOrElse(
     if (s.startsWith(header)) projectRoot.resolve(s.drop(header.size)).toFile
     else FormatCommons.stringToFile(s)
   )
