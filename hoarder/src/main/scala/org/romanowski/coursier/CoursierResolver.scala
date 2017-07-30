@@ -8,7 +8,6 @@ package org.romanowski.coursier
 
 import java.io.File
 
-import coursier.FromSbt
 import sbt.Logger
 import sbt.ModuleID
 import sbt.Resolver

@@ -1,4 +1,4 @@
-package coursier
+package org.romanowski.coursier
 
 object SbtCompatibility {
 

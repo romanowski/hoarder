@@ -4,7 +4,7 @@ set -o xtrace && \
     echo simulate stash workflow, first clone && \
     git clone -b hoarder-ci https://github.com/romanowski/ensime-server.git test-ws && \
     echo download caches && \
-    mv .hoarder-cache test-ws && \
+  #  mv .hoarder-cache test-ws && \
     cd test-ws  && \
     git config --global user.email "you@example.com" && \
     git config --global user.name "Your Name" && \
