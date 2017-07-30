@@ -1,7 +1,12 @@
 import HoarderSettings.autoimport._
-
 version.in(Global) := "1.0.1-SNAPSHOT"
 crossSbtVersions := Seq("0.13.16", "1.0.0-RC3")
+
+def sbtRepo = {
+  import sbt.Resolver._
+  url("sbt-release-repo", new URL(s"$TypesafeRepositoryRoot/ivy-releases/"))(ivyStylePatterns)
+}
+
 
 def commonSettings(isSbtPlugin: Boolean = true) =  Seq(
   (unmanagedSourceDirectories in Compile) += baseDirectory.value / "src" / "main" / s"sbt_${sbtPrefix.value}",
@@ -10,7 +15,7 @@ def commonSettings(isSbtPlugin: Boolean = true) =  Seq(
   sbtPlugin := isSbtPlugin,
   organization := "com.github.romanowski",
   publishMavenStyle := true,
-  resolvers += Resolver.typesafeIvyRepo("releases"),
+  resolvers += sbtRepo,
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
     if (isSnapshot.value)
