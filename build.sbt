@@ -1,5 +1,6 @@
 import HoarderSettings.autoimport._
-version.in(Global) := "1.0.1-SNAPSHOT"
+version.in(Global) := Option(System.getenv("HOARDER_CI_VERSION"))
+  .getOrElse("0.0.1-SNAPSHOT")
 crossSbtVersions := Seq("0.13.16", "1.0.0-RC3")
 
 def sbtRepo = {
