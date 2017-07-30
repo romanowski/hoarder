@@ -14,7 +14,6 @@ import org.romanowski.coursier.CoursierResolver
 import org.romanowski.hoarder.core.ExportedCache
 import org.romanowski.hoarder.core.HoarderCompilationCache
 import org.romanowski.hoarder.core.HoarderEngine
-import org.romanowski.hoarder.core.SbtTypes.CompilationResult
 import sbt.Def._
 import sbt.Keys._
 import sbt._

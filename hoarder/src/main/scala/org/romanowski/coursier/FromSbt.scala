@@ -1,18 +1,21 @@
-package coursier
+package org.romanowski.coursier
+
+import SbtCompatibility._
 
 import java.net.MalformedURLException
 import java.net.URL
 
-import coursier.SbtCompatibility._
 import coursier.core.Authentication
 import coursier.ivy.IvyRepository
 import coursier.ivy.IvyXml.{mappings => ivyXmlMappings}
+import coursier.maven.MavenRepository
 import sbt.CrossVersion
 import sbt.ModuleID
 import sbt.Resolver
 
 import scalaz.-\/
 import scalaz.\/-
+import coursier._
 
 object FromSbt {
 
