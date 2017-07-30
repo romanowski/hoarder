@@ -10,6 +10,7 @@ def commonSettings(isSbtPlugin: Boolean = true) =  Seq(
   sbtPlugin := isSbtPlugin,
   organization := "com.github.romanowski",
   publishMavenStyle := true,
+  resolvers += Resolver.typesafeIvyRepo("releases"),
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
     if (isSnapshot.value)
@@ -17,7 +18,7 @@ def commonSettings(isSbtPlugin: Boolean = true) =  Seq(
     else
       Some("releases" at nexus + "service/local/staging/deploy/maven2")
   },
-  scalaVersion := cross("2.10.6", "2.12.2").value,
+  scalaVersion := bySbtVersion("2.10.6", "2.12.2").value,
   pomIncludeRepository := { _ => false },
   licenses := Seq("Apache-style" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
   homepage := Some(url("https://romanowski.github.io/hoarder")),
@@ -52,4 +53,3 @@ val hoarderTests = project.dependsOn(hoarderAmazon)
     })
 
 val root = project aggregate(hoarderCore, hoarder, hoarderTests, hoarderAmazon)
-

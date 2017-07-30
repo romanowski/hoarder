@@ -1,9 +1,7 @@
 package org.romanowski.hoarder.core
 
 import java.nio.file.Path
-
-import xsbti.compile.analysis._
-import xsbti.compile._
+import ZincSpecific._
 
 case class ExportedCache(analysis: Path, verificationResults: Option[VerficationResults])
 

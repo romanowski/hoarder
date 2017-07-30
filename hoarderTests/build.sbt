@@ -7,5 +7,3 @@ scriptedLaunchOpts := { scriptedLaunchOpts.value ++
     "-Dplugin.version=" + version.value
   )
 }
-
-scriptedBufferLog := false

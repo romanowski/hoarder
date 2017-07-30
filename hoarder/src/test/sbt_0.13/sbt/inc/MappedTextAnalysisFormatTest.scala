@@ -4,7 +4,10 @@ import java.io.File
 
 import org.scalacheck.Prop
 import org.scalacheck.Properties
+import sbt.inc.hoarder.DefaultFormat
+import sbt.inc.hoarder.MappableFormat
 import sbt.internal.inc._
+import sbt.internal.inc.hoarder.DefaultFormat
 
 import scala.util.Random
 import scala.util.Try

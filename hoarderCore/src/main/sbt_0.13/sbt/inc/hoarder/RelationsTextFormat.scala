@@ -1,11 +1,10 @@
-package sbt.inc
+package sbt
+package inc
+package hoarder
 
 import java.io.BufferedReader
 import java.io.File
 import java.io.Writer
-
-import sbt.Relation
-import sbt.internal.inc._
 
 
 trait RelationsTextFormat extends FormatCommons {

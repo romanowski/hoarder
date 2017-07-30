@@ -1,4 +1,4 @@
-package sbt.internal.inc
+package sbt.inc.hoarder
 
 import java.io.BufferedReader
 import java.io.File

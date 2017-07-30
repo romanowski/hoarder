@@ -4,22 +4,11 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 
-import sbt.io._
-import xsbti.compile.analysis._
-import xsbti.compile._
-
+import ZincSpecific._
 
 object FileBasedCompilationCache {
   val analysisCacheZipFileName = "analysis.zip"
   val classesZipFileName = "classes.zip"
-
-  implicit class AnalysisContentsOps(on: AnalysisContents) {
-    def output(): File = {
-      val singleOutput = on.getMiniSetup().output().getSingleOutput
-      assert(singleOutput.isPresent(), "Hoarder can import cache only into single input!")
-      singleOutput.get()
-    }
-  }
 }
 
 trait FileBasedCompilationCache extends CompilationCache {
@@ -36,35 +25,41 @@ trait FileBasedCompilationCache extends CompilationCache {
       Files.isDirectory(cacheLocation) && Files.exists(cacheLocation),
       s"Cache does not exists in ${cacheLocation.toAbsolutePath()}")
 
-    val mapper = createMapper
-    val store = FileAnalysisStore.getDefault(cacheLocation.resolve(analysisCacheZipFileName).toFile, mapper)
-
-    val content = sbt.util.InterfaceUtil.toOption(store.get())
-    content.flatMap {
+    importAnalysisContent().flatMap {
       original =>
         importBinaries(original)
         // We need to load cache again to update modification date
-        sbt.util.InterfaceUtil.toOption(store.get())
+        importAnalysisContent()
     }
   }
   override def exportCache(from: AnalysisContents): ExportedCache = {
-    val mapper = createMapper
-    val verifier = cacheVerifier()
-    val verifiedMapper = verifier.map(_.verifingMappers(mapper)).getOrElse(mapper)
-
     cleanupAndPrepareCacheLocation()
 
     val analysisPath = cacheLocation.resolve(analysisCacheZipFileName)
-    val store = FileAnalysisStore.getDefault(analysisPath.toFile, verifiedMapper)
-    store.set(from)
+    val verifier = exportAnalysisContent(from, analysisPath)
     exportBinaries(from)
 
     ExportedCache(analysisPath, verifier.map(_.results()))
   }
 
-  protected def createMapper: ReadWriteMappers
+  protected def createMapper: AnalysisMapper
 
   protected def cacheLocation: Path
+
+  protected def exportAnalysis(content: AnalysisContents): Unit = {
+
+  }
+
+  protected def importAnalysisContent(): Option[AnalysisContents] =
+    createMapper.loadAnalysis(cacheLocation.resolve(analysisCacheZipFileName))
+
+  protected def exportAnalysisContent(content: AnalysisContents, location: Path): Option[CacheVerifier] = {
+    val verifier = cacheVerifier()
+    val mapper = createMapper
+    val verifiedMapper = verifier.map(_.verifingMappers(mapper)).getOrElse(mapper)
+    verifiedMapper.storeAnalysis(location, content)
+    verifier
+  }
 
   protected def cacheVerifier(): Option[CacheVerifier] = None
 
@@ -86,16 +81,13 @@ trait FileBasedCompilationCache extends CompilationCache {
 
     val zippedBinaries = cacheLocation.resolve(classesZipFileName)
     IO.zip(classesToZip, zippedBinaries.toFile)
-
-    from.getAnalysis()
   }
 
   protected def cleanOutputMode: CleanOutputMode = CleanOutput
   protected def overrideExistingCache: Boolean = true
 
-
   protected def binariesToExport(outputDir: File, from: AnalysisContents): Seq[File] =
-    (PathFinder(outputDir) ** "*.class").get //TODO use analysis
+    outputDir findInDir "*.class" //TODO use analysis
 
   protected def prepareImportDirectory(outputDir: File): Unit = {
     if (outputDir.exists()) {
@@ -107,8 +99,7 @@ trait FileBasedCompilationCache extends CompilationCache {
             if (outputDir.list().nonEmpty)
               throw new IllegalStateException(s"Output directory: $outputDir is not empty and cleanOutput is false")
           case CleanClasses =>
-            val classFiles = PathFinder(outputDir) ** "*.class"
-            IO.delete(classFiles.get)
+            IO.delete(outputDir findInDir "*.class")
         }
       } else throw new IllegalStateException(s"Output file: $outputDir is not a directory")
     }

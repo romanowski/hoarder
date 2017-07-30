@@ -9,10 +9,9 @@ package org.romanowski.hoarder.core
 import java.io.File
 
 import sbt.Hash
-import sbt.IO
 import sbt.inc.Hash
 import sbt.inc.Stamp
-import sbt.internal.inc.ContextAwareMapper
+import sbt.inc.hoarder.ContextAwareMapper
 
 object LineEndingAgnosticSources {
 

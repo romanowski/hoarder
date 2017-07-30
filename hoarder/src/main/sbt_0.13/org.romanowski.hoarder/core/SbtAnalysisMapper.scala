@@ -14,23 +14,35 @@ import java.nio.file.Paths
 import sbt.Attributed
 import sbt.Keys._
 import sbt.inc.Stamp
-import sbt.internal.inc.AnalysisMappers
-import sbt.internal.inc.ContextAwareMapper
-import sbt.internal.inc.FormatCommons
-import sbt.internal.inc.Mapper
+import sbt.inc.hoarder._
 
 
-class SbtAnalysisMapper(sbtOutput: Path,
-                        sourceRoots: Seq[Path],
-                        projectRoot: Path,
-                        classpath: Seq[Attributed[File]],
-                        includeSize: Boolean = false) extends AnalysisMappers {
+case class SbtAnalysisMapper(sbtOutput: Path,
+                             sourceRoots: Seq[Path],
+                             projectRoot: Path,
+                             classpath: Seq[Attributed[File]],
+                             includeSize: Boolean = false) {
 
-  case class JarDescriptor(org: String, rev: String, name: String, fileName: String, cl: Option[String], configuration: Option[String])
+  val mappers = new AnalysisMappers {
+    override val outputDirMapper: Mapper[File] = Mapper.relativizeFile(sbtOutput)
+    override val sourceDirMapper: Mapper[File] = Mapper.multipleRoots(sourceRoots :+ projectRoot)
+    override val sourceMapper: Mapper[File] = sourceDirMapper
+    override val productMapper: Mapper[File] = Mapper.relativizeFile(sbtOutput)
+    override val binaryMapper: Mapper[File] = Mapper(readDescriptor, writeDescriptor)
+
+    override val sourceStampMapper: ContextAwareMapper[File, Stamp] =
+      LineEndingAgnosticSources.mapper
+    override val binaryStampMapper: ContextAwareMapper[File, Stamp] =
+      Mapper.updateModificationDateFileMapper(binaryMapper)
+    override val productStampMapper: ContextAwareMapper[File, Stamp] =
+      Mapper.updateModificationDateFileMapper(productMapper)
+  }
+
+  private case class JarDescriptor(org: String, rev: String, name: String, fileName: String, cl: Option[String], configuration: Option[String])
 
   private val header = "##"
 
-  def stringifyAttributes(from: Attributed[File]): Option[String] = for {
+  private def stringifyAttributes(from: Attributed[File]): Option[String] = for {
     artifact <- from.get(artifact.key)
     module <- from.get(moduleID.key)
   } yield
@@ -43,7 +55,7 @@ class SbtAnalysisMapper(sbtOutput: Path,
       if (includeSize) from.data.length() else -1
     ).mkString("#")
 
-  def asJVMJar(filePath: Path): Option[String] = for {
+  private def asJVMJar(filePath: Path): Option[String] = for {
     javaHome <- Option(System.getProperty("java.home"))
     javaHomePath = Paths.get(javaHome)
     if filePath.startsWith(javaHomePath)
@@ -51,7 +63,7 @@ class SbtAnalysisMapper(sbtOutput: Path,
     relativePath = javaHomePath.relativize(filePath)
   } yield s"##$javaVersion##$relativePath"
 
-  def writeDescriptor(f: File): String = {
+  private def writeDescriptor(f: File): String = {
     classpath.find(_.data == f).flatMap(stringifyAttributes)
       .orElse(asJVMJar(f.toPath))
       .getOrElse(
@@ -60,7 +72,7 @@ class SbtAnalysisMapper(sbtOutput: Path,
       )
   }
 
-  lazy val jvmClasspath: Map[String, File] = if (ManagementFactory.getRuntimeMXBean.isBootClassPathSupported)
+  private lazy val jvmClasspath: Map[String, File] = if (ManagementFactory.getRuntimeMXBean.isBootClassPathSupported)
     ManagementFactory.getRuntimeMXBean.getBootClassPath.split(File.pathSeparator).flatMap { s =>
       val path = Paths.get(s)
       val jvmJar = asJVMJar(path)
@@ -68,26 +80,13 @@ class SbtAnalysisMapper(sbtOutput: Path,
     }(collection.breakOut)
   else Map.empty
 
-  lazy val classpathDescriptors: Map[String, File] =
+  private lazy val classpathDescriptors: Map[String, File] =
     jvmClasspath ++ classpath.map(stringifyAttributes).zip(classpath).collect {
       case (Some(k), attributted) => k -> attributted.data
     }(collection.breakOut)
 
-  def readDescriptor(s: String): File = classpathDescriptors.getOrElse(s,
+  private def readDescriptor(s: String): File = classpathDescriptors.getOrElse(s,
     if (s.startsWith(header)) projectRoot.resolve(s.drop(header.size)).toFile
     else FormatCommons.stringToFile(s)
   )
-
-  override val outputDirMapper: Mapper[File] = Mapper.relativizeFile(sbtOutput)
-  override val sourceDirMapper: Mapper[File] = Mapper.multipleRoots(sourceRoots :+ projectRoot)
-  override val sourceMapper: Mapper[File] = sourceDirMapper
-  override val productMapper: Mapper[File] = Mapper.relativizeFile(sbtOutput)
-  override val binaryMapper: Mapper[File] = Mapper(readDescriptor, writeDescriptor)
-
-  override val sourceStampMapper: ContextAwareMapper[File, Stamp] =
-    LineEndingAgnosticSources.mapper
-  override val binaryStampMapper: ContextAwareMapper[File, Stamp] =
-    Mapper.updateModificationDateFileMapper(binaryMapper)
-  override val productStampMapper: ContextAwareMapper[File, Stamp] =
-    Mapper.updateModificationDateFileMapper(productMapper)
 }

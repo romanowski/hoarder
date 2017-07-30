@@ -1,9 +1,9 @@
 package sbt.inc
+package hoarder
 
 import java.io._
 import javax.xml.bind.DatatypeConverter
 
-import sbt.internal.inc._
 import sbt.CompileOptions
 import sbt.CompileSetup
 import xsbti.api.Compilation

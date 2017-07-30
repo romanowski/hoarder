@@ -19,7 +19,7 @@ import sbt.Def._
 import sbt.Keys._
 import sbt._
 import org.romanowski.hoarder.core.SbtTypes._
-import xsbti.compile.AnalysisContents
+import org.romanowski.hoarder.core.ZincSpecific.AnalysisContents
 
 object CachedRelease extends HoarderEngine {
 

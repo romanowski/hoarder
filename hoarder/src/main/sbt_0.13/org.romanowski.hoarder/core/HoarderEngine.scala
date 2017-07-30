@@ -15,19 +15,39 @@ import java.nio.file.Path
 import java.util
 
 import org.romanowski.HoarderKeys.CacheSetup
-import org.romanowski.HoarderKeys.ExportedCache
 import org.romanowski.hoarder.core.SbtTypes.CompilationResult
 import org.romanowski.hoarder.core.SbtTypes.PreviousCompilationResult
 import sbt.Compiler.PreviousAnalysis
 import sbt.PathFinder
 import sbt._
 import sbt.compiler.MixedAnalyzingCompiler
-import sbt.inc.MappableFormat
-import sbt.internal.inc.AnalysisMappers
-import xsbti.compile.SingleOutput
-
 
 class HoarderEngine extends HoarderEngineCommon {
+
+  protected override def exportCacheTaskImpl(cacheSetup: CacheSetup,
+                                             result: CompilationResult,
+                                             globalCacheLocation: Path): ExportedCache =
+    compilationCache(cacheSetup, globalCacheLocation).exportCache(result.analysis -> result.setup)
+
+
+  protected override def importCacheTaskImpl(cacheSetup: CacheSetup,
+                                             globalCacheLocation: Path): Option[PreviousCompilationResult] = {
+
+    compilationCache(cacheSetup, globalCacheLocation).loadCache().map { case (analysis, setup) =>
+      val importedStore = MixedAnalyzingCompiler.staticCachedStore(cacheSetup.analysisFile)
+      importedStore.set(analysis, setup)
+
+      PreviousAnalysis(analysis, Some(setup))
+    }
+  }
+
+  protected def compilationCache(cacheSetup: CacheSetup, globalCacheLocation: Path): CompilationCache =
+    new HoarderCompilationCache(cacheSetup, globalCacheLocation)
+}
+
+/*
+
+class HoarderEngine2 extends HoarderEngineCommon {
 
   val charset = Charset.forName("UTF-8")
 
@@ -167,10 +187,6 @@ class HoarderEngine extends HoarderEngineCommon {
     new SbtAnalysisMapper(classesRoot, sourceRoots.map(_.toPath), projectRoot, classpath)
   }
 
-  private def outputForProject(setup: CompileSetup): File = setup.output match {
-    case s: SingleOutput =>
-      s.outputDirectory()
-    case _ =>
-      fail("Cannot use cache in multi-output situation")
-  }
+  private def outputForProject(setup: CompileSetup): File = setup.output
 }
+*/
