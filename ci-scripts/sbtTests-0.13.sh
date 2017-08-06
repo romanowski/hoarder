@@ -1,4 +1,3 @@
 set -o xtrace && \
-    cd 0.13 && \
-    sbt test && \
-    sbt scripted
+    sbt ";^^ 0.13.16; test" && \
+    sbt ";^^0.13.16;hoarderTests/scripted"

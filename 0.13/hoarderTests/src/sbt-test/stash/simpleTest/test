@@ -1,9 +1,0 @@
-> stash
-$ touch .cached-compilation
-> clean
-> stashApply
-$ touch .cached-compilation-done
-> testCacheImport
-> testIncCompilation
-$ copy-file changes/Ala.scala src/main/scala/Ala.scala
-> testIncCompilation Ala

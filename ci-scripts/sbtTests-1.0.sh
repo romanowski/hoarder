@@ -1,4 +1,4 @@
 set -o xtrace && \
-    cd 1.0 && \
+    export HOARDER_BUCKET_PREFIX=$TRAVIS_BRANCH
     sbt test && \
     sbt scripted

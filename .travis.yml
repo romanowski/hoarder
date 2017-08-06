@@ -9,20 +9,17 @@ before_cache:
 
 cache:
   directories:
-  - 0.13/.hoarder-cache
+  - .hoarder-cache
   - $HOME/.ivy2/cache
   - $HOME/.sbt
   - $HOME/.coursier
-  # Uncomment below after new release of sbt
-  #- 1.0/.hoarder-cache
 
 env:
   matrix:
+   - scriptName=sbtTests-1.0
    - scriptName=integrationTest
    - scriptName=sbtTests-0.13
-#   Uncomment below after new release of sbt
-#   - scriptName=sbtTests-1.0
-
+   - scriptName=s3-integration
 
 script:
   - echo Will run ci-scripts/scriptName.sh

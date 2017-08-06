@@ -1,0 +1,16 @@
+> hoarderCleanCiCaches
+# export=true use=true
+$ touch .shouldUseCache
+$ touch .shouldPublishCaches
+# Generate cache
+> postBuild
+# Apply cache
+$ touch .cached-compilation
+$ touch .cached-compilation-done
+> clean
+> preBuild
+> testCacheImport
+> clean
+> hoarderCleanCiCaches
+> preBuild
+-> testCacheImport
