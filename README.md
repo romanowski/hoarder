@@ -3,6 +3,8 @@
 [![Build Status](https://api.travis-ci.org/romanowski/hoarder.png?branch=master)](https://travis-ci.org/romanowski/hoarder)
 [![Gitter room](https://badges.gitter.im/sbt_hoarder/Lobby.svg)](https://gitter.im/sbt_hoarder/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Current realease](https://maven-badges.herokuapp.com/maven-central/com.github.romanowski/hoarder/badge.png)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.github.romanowski%22)
+[![Master on gitlab](https://gitlab.com/romanowski1/hoarder/badges/master/pipeline.svg)](https://gitlab.com/romanowski1/hoarder/commits/master)
+
 
 Hoarder is the set of sbt plugins (for sbt 1.0.x and 0.13.x) that allows you to reuse compilation data from other workspaces (aka. _Cached compilation_).
 

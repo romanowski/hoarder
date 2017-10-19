@@ -1,0 +1,33 @@
+image: java:8
+
+stages:
+  - test
+
+cache:
+  key: global
+  paths:
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt
+    - $HOME/.coursier
+
+before_script:
+  - apt-get update -y
+  - apt-get install apt-transport-https -y
+  ## Install SBT
+  - echo "deb http://dl.bintray.com/sbt/debian /" | tee -a /etc/apt/sources.list.d/sbt.list
+  - apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 642AC823
+  - apt-get update -y
+  - apt-get install sbt -y
+  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete || echo no .ivy cache
+  - find $HOME/.sbt        -name "*.lock"               -print -delete || echo no .sbt cache
+
+test-1.x:
+  stage: test
+  script:
+    - ls -alR
+    - ci-sciripts/sbtTests-1.0.sh
+
+test-0.13.x:
+  stage: test
+  script:
+    - ci-sciripts/sbtTests-0.13.sh
