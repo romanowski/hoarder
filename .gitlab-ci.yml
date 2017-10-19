@@ -24,10 +24,10 @@ before_script:
 test-1.x:
   stage: test
   script:
-    - ls -alR
-    - ci-sciripts/sbtTests-1.0.sh
+    - ls ci-scripts -alR
+    - ci-scripts/sbtTests-1.0.sh
 
 test-0.13.x:
   stage: test
   script:
-    - ci-sciripts/sbtTests-0.13.sh
+    - ci-scripts/sbtTests-0.13.sh
