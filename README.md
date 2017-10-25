@@ -32,6 +32,9 @@ Hoarder can be used in your project in multiple ways (workflows) described below
 Stash workflow allows you to stash compilation results similarly to changes in git.
 Running `stash` task will store your current compilation data in a global directory for your project and later you can import that compilation using `stashApply` command. More can be found in [docs](docs/stash.md).
 
+The stash workflow can be useful to avoid recompilation in
+a [gitlab-ci](docs/gitlab-ci.md) pipeline.
+
 ### [Cached PR verfication builds (e.g. Travis ones)](docs/stash.md)
 
 This workflow main goal is speed up of PR verification builds incrementally recompiling changes in PR. 
