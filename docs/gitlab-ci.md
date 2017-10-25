@@ -4,13 +4,15 @@ It is possible to use the stash workflow to avoid recompiling sources multiple
 times in a single gitlab-ci pipeline.  For instance if you have different jobs
 in the your pipeline which run different variations of `sbt test`.
 
+`sbt-hoarder` works largely out of the box.
 For convenience if you have a multi-project build, you may wish to change
-the default stash directory to be at the top level of your project:
+the default stash directory to be at the top level of your project like this:
 ```
 globalStashLocation := (baseDirectory in ThisBuild).value / "sbt-stash"
 ```
 
-Example `gitlab-ci.yaml`:
+Then you should use `artifacts:` and `dependencies:` as in the following
+example `gitlab-ci.yaml`:
 
 ```
 stages:
@@ -38,7 +40,7 @@ slow-integration-test-two:
   dependencies:
     - unit-test
   script:
-    - sbt stashApply 'IntegrtionTestTwo/test'
+    - sbt stashApply 'IntegrationTestTwo/test'
 ```
 
 ## Use `artifacts:` not `cache:`
@@ -59,6 +61,8 @@ None of this is an issue if you use `artifacts:` as in the example above.
 external dependencies.  You could cache your `~/.ivy` directory.)
 
 ## Alternatives
+
+You may not need sbt-hoarder at all:
 
 - Simplest is to combine all your sbt tasks into one gitlab-ci
   job.  Then no caching is required.
