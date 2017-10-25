@@ -36,6 +36,6 @@ Loading cached results needs to clean up previous compilation (if exsist) and by
 
 ### Cleaning stashed compilation: `stashClean` task
 
-`stashApply [<projectLabel> [<versionLabel>]]`
+`stashClean [<projectLabel> [<versionLabel>]]`
 
 This task will clean cached compilation under given labels. Implemented for @mfedortsov. 
