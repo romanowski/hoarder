@@ -5,22 +5,14 @@ branches:
   - master
 
 before_cache:
-  - if [ "$TRAVIS_EVENT_TYPE" == "push"] then
-      mkdir .home-cache;
-      find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete;
-      find $HOME/.sbt        -name "*.lock"               -print -delete;
-      cp -r $HOME/.ivy2/cache .home-cache;
-      cp -r $HOME/.sbt .home-cache;
-      cp -r $HOME/.coursier .home-cache;
-    else
-      rm -rf .home-cache;
-      rm -rf .hoarder-cache;
-    fi
+  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
+  - find $HOME/.sbt        -name "*.lock"               -print -delete
 
 cache:
   directories:
-  - .home-cache
-  - .hoarder-cache
+  - $HOME/.ivy2/cache
+  - $HOME/.sbt
+  - $HOME/.coursier
 
 env:
   matrix:
@@ -30,7 +22,6 @@ env:
    - scriptName=s3-integration
 
 script:
-  - mv -r .home-cache/* $HOME
   - echo Will run ci-scripts/$scriptName.sh
   - bash ci-scripts/$scriptName.sh
 

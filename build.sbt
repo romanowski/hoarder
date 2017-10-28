@@ -58,4 +58,7 @@ val hoarderTests = project.dependsOn(hoarderAmazon)
       publishLocal.value
     })
 
-val root = project aggregate(hoarderCore, hoarder, hoarderTests, hoarderAmazon)
+val hoarderIntegrationTests = project.dependsOn(hoarder)
+  .settings(commonSettings())
+
+val root = project aggregate(hoarderCore, hoarder, hoarderTests, hoarderAmazon, hoarderIntegrationTests)
