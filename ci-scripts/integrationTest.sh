@@ -4,17 +4,13 @@ rm -r -f test-ws
 export HOARDER_CI_VERSION="1.0.1-a-test-version"
 
 sbt '^publishLocal' && \
+    ls -alR test-ws
     ci-scripts/install-and-clone.sh ensime-server && \
-    echo download caches && \
-    mv .hoarder-cache test-ws && \
     cd test-ws  && \
-    git config --global user.email "you@example.com" && \
-    git config --global user.name "Your Name" && \
-    git merge origin/hoarder-ci-test -m "Test" && \
-    sbt preBuild && \
-    sbt test:compile && \
+    echo object IntegrationTest extends org.romanowski.hoarder.tests.IntegrationTestFlowBase > project/IntegrationTest.scala
     sbt postBuild && \
+    export HOARDER_CACHE_EXPORTED=true && \
+    sbt clean
     sbt preventCompilationStatus && \
-    echo upload caches && \
-    cd .. && \
-    mv test-ws/.hoarder-cache .
+    sbt preBuild && \
+    sbt test:compile

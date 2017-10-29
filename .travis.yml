@@ -1,7 +1,8 @@
 language: scala
 
-scala:
-  - 2.11.8
+branches:
+  only:
+  - master
 
 before_cache:
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
@@ -9,7 +10,6 @@ before_cache:
 
 cache:
   directories:
-  - .hoarder-cache
   - $HOME/.ivy2/cache
   - $HOME/.sbt
   - $HOME/.coursier
@@ -22,7 +22,7 @@ env:
    - scriptName=s3-integration
 
 script:
-  - echo Will run ci-scripts/scriptName.sh
+  - echo Will run ci-scripts/$scriptName.sh
   - bash ci-scripts/$scriptName.sh
 
 jdk:
