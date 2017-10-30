@@ -1,7 +1,8 @@
 import HoarderSettings.autoimport._
 
 version.in(Global) := Option(System.getenv("HOARDER_CI_VERSION"))
-  .getOrElse("0.0.1-SNAPSHOT")
+  .getOrElse("1.0.3-SNAPSHOT")
+
 crossSbtVersions := Seq("0.13.16", "1.0.2")
 
 def sbtRepo = {
@@ -9,7 +10,9 @@ def sbtRepo = {
   url("sbt-release-repo", new URL(s"$TypesafeRepositoryRoot/ivy-releases/"))(ivyStylePatterns)
 }
 
-def testsSettings = Seq(publishTo := None)
+def noPublishSettings = Seq(
+  publishTo := Some(Resolver.file("file-test",  new File( "see-release")))
+)
 
 def commonSettings(isSbtPlugin: Boolean = true) =  Seq(
   (unmanagedSourceDirectories in Compile) += baseDirectory.value / "src" / "main" / s"sbt_${sbtPrefix.value}",
@@ -51,7 +54,7 @@ val hoarder = project.settings(commonSettings()).dependsOn(hoarderCore)
 val hoarderAmazon = project.in(file("hoarder-amazon")).dependsOn(hoarder).settings(commonSettings())
 
 val hoarderTests = project.dependsOn(hoarderAmazon)
-  .settings(commonSettings() ++ testsSettings)
+  .settings(commonSettings() ++ noPublishSettings)
   .settings(
     publishLocal := {
       (publishLocal in hoarderCore).value
@@ -61,7 +64,7 @@ val hoarderTests = project.dependsOn(hoarderAmazon)
     })
 
 val hoarderIntegrationTests = project.dependsOn(hoarder)
-  .settings(commonSettings() ++ testsSettings)
+  .settings(commonSettings() ++ noPublishSettings)
 
 val root = project.aggregate(hoarderCore, hoarder, hoarderTests, hoarderAmazon, hoarderIntegrationTests).settings(
   taskKey[Unit]("doRelease") := {
@@ -69,6 +72,8 @@ val root = project.aggregate(hoarderCore, hoarder, hoarderTests, hoarderAmazon, 
     publish.in(hoarder).value
     publish.in(hoarderAmazon).value
   }
-)
+).settings(noPublishSettings)
 
-addCommandAlias("doRelease", ";^doRelease;sonatypeReleaseAll")
+addCommandAlias("doRelease", ";^publishSigned;sonatypeReleaseAll")
+
+noPublishSettings
