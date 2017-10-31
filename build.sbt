@@ -11,40 +11,37 @@ def sbtRepo = {
 }
 
 def noPublishSettings = Seq(
-  publishTo := Some(Resolver.file("file-test",  new File( "see-release")))
+  publishTo := Some(Resolver.file("file-test",  new File( "see-release"))),
+  //publishArtifact := false
 )
+
+inThisBuild(List(
+  licenses := Seq("Apache-style" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+  homepage := Some(url("https://romanowski.github.io/hoarder")),
+  developers := List(
+    Developer("romanowski", "Krzysztof Romanowski", "romanowski.kr@gmail.com", new URL("http://typosafe.pl"))),
+  pomExtra := (
+    <scm>
+      <url>git@github.com:romanowski/hoarder.git</url>
+      <connection>scm:git:git@github.com:romanowski/hoarder.git</connection>
+    </scm>
+    ),
+  organization := "com.github.romanowski",
+  pgpPublicRing := file("ci-scripts/pubring.asc"),
+  pgpSecretRing := file("ci-scripts/secring.asc"),
+  releaseEarlyWith := SonatypePublisher
+))
 
 def commonSettings(isSbtPlugin: Boolean = true) =  Seq(
   (unmanagedSourceDirectories in Compile) += baseDirectory.value / "src" / "main" / s"sbt_${sbtPrefix.value}",
   (unmanagedSourceDirectories in Test) += baseDirectory.value / "src" / "test" / s"sbt_${sbtPrefix.value}",
   version := version.in(Global).value,
   sbtPlugin := isSbtPlugin,
-  organization := "com.github.romanowski",
   publishMavenStyle := true,
   resolvers += sbtRepo,
-  publishTo := {
-    val nexus = "https://oss.sonatype.org/"
-    if (isSnapshot.value)
-      Some("snapshots" at nexus + "content/repositories/snapshots")
-    else
-      Some("releases" at nexus + "service/local/staging/deploy/maven2")
-  },
   scalaVersion := bySbtVersion("2.10.6", "2.12.2").value,
   pomIncludeRepository := { _ => false },
-  licenses := Seq("Apache-style" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
-  homepage := Some(url("https://romanowski.github.io/hoarder")),
-  pomExtra := (
-    <scm>
-      <url>git@github.com:romanowski/hoarder.git</url>
-      <connection>scm:git:git@github.com:romanowski/hoarder.git</connection>
-    </scm>
-      <developers>
-        <developer>
-          <id>romanowski</id>
-          <name>Krzysztof Romanowski</name>
-          <url>http://typosafe.pl</url>
-        </developer>
-      </developers>)
+
 )
 
 val hoarderCore = project.settings(commonSettings(isSbtPlugin = false))
@@ -73,7 +70,5 @@ val root = project.aggregate(hoarderCore, hoarder, hoarderTests, hoarderAmazon, 
     publish.in(hoarderAmazon).value
   }
 ).settings(noPublishSettings)
-
-addCommandAlias("doRelease", ";^publishSigned;sonatypeReleaseAll")
 
 noPublishSettings
