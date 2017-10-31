@@ -20,6 +20,8 @@ env:
    - scriptName=integrationTest
    - scriptName=sbtTests-0.13
    - scriptName=s3-integration
+   - scriptName=deploy
+
 
 script:
   - echo Will run ci-scripts/$scriptName.sh
