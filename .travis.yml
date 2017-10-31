@@ -16,10 +16,10 @@ cache:
 
 env:
   matrix:
-   - scriptName=sbtTests-1.0
-   - scriptName=integrationTest
-   - scriptName=sbtTests-0.13
-   - scriptName=s3-integration
+   #- scriptName=sbtTests-1.0
+   #- scriptName=integrationTest
+   #- scriptName=sbtTests-0.13
+   #- scriptName=s3-integration
    - scriptName=deploy
 
 

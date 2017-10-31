@@ -1,7 +1,7 @@
 import HoarderSettings.autoimport._
 
-version.in(Global) := Option(System.getenv("HOARDER_CI_VERSION"))
-  .getOrElse("1.0.3-SNAPSHOT")
+/*version.in(Global) := Option(System.getenv("HOARDER_CI_VERSION"))
+  .getOrElse("1.0.3-SNAPSHOT")*/
 
 crossSbtVersions := Seq("0.13.16", "1.0.2")
 
@@ -11,7 +11,7 @@ def sbtRepo = {
 }
 
 def noPublishSettings = Seq(
-  publishTo := Some(Resolver.file("file-test",  new File( "see-release"))),
+  releaseEarly := {},
   //publishArtifact := false
 )
 
