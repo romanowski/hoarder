@@ -37,7 +37,7 @@ Running `stash` task will store your current compilation data in a global direct
 The stash workflow can be useful to avoid recompilation in
 a [gitlab-ci](docs/gitlab-ci.md) pipeline.
 
-### [Cached PR verfication builds (e.g. Travis ones)](docs/stash.md)
+### [Cached PR verfication builds (e.g. Travis ones)](docs/prVerification.md)
 
 This workflow main goal is speed up of PR verification builds incrementally recompiling changes in PR. 
 
