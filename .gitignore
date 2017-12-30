@@ -21,3 +21,7 @@ project/plugins/project/
 
 #integration tests dir
 /test-ws
+
+# to test deploy
+private-*
+repo

@@ -6,24 +6,20 @@ import scala.util.control.NonFatal
 
 
 val exactVersion = SettingKey[Option[String]]("exactVersion")
-exactVersion.in(Global) := Try("git describe --tags --exact-match".!!).toOption
+exactVersion.in(Global) := Try("git describe --tags --exact-match".!!.trim).toOption
 
 version.in(Global) := {
-  try {
-    val (version, distance) = exactVersion.value match {
-      case Some(version) =>
-        version -> 0
-      case _ =>
-        val output = "git describe --tags".!!.split('-')
-        ???
-    }
-    if (!sys.env.contains("TRAVIS_BRANCH")) {
-      val commit = "git rev-parse HEAD".!!
-      s"$version-SNAPSHOT-$distance-${commit.take(7)}"
-    } else if (distance == 0) version else s"$version-M$distance"
+  try exactVersion.value match {
+    case Some(version) =>
+      if (sys.env.contains("TRAVIS_BRANCH")) version else s"$version-SNAPSHOT"
+    case _ =>
+      val output = "git describe --tags".!!.trim.split('-')
+      val version = output.dropRight(2).mkString("-")
+      val distance = output.takeRight(2).head
+      s"$version-M$distance-SNAPSHOT"
   } catch {
     case NonFatal(e) =>
-      print("[ERROR] Unable to compute version. Falling back to 0.1.0-SNAPSHOT")
+      println("[ERROR] Unable to compute version. Falling back to 0.1.0-SNAPSHOT")
       e.printStackTrace()
       "0.1.0-SNAPSHOT"
   }
@@ -37,11 +33,11 @@ def sbtRepo = {
 }
 
 def noPublishSettings = Seq(
-  publishArtifact := false,
-  publishArtifact.in(publishLocal) := true
+  publishTo := Some(Resolver.file("my-local", file(".") / "repo")(Resolver.defaultIvyPatterns)),
+  publishLocalConfiguration ~= (_.withOverwrite(true))
 )
 
-inThisBuild(List(
+def publishSettings = Seq(
   licenses := Seq("Apache-style" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
   homepage := Some(url("https://romanowski.github.io/hoarder")),
   developers := List(
@@ -53,19 +49,22 @@ inThisBuild(List(
     </scm>
     ),
   organization := "com.github.romanowski",
-))
+  publishTo := {
+    import Opts.resolver._
+    Some(if (isSnapshot.value) sonatypeSnapshots else sonatypeStaging)
+  },
+  publishMavenStyle := true,
+  pomIncludeRepository := { _ => false },
+  PgpKeys.publishSignedConfiguration := publishConfiguration.value.withOverwrite(isSnapshot.value)
+)
 
-def commonSettings(isSbtPlugin: Boolean = true) = Seq(
+def commonSettings(isSbtPlugin: Boolean = true, shouldPublish: Boolean = true) = Seq(
   (unmanagedSourceDirectories in Compile) += baseDirectory.value / "src" / "main" / s"sbt_${sbtPrefix.value}",
   (unmanagedSourceDirectories in Test) += baseDirectory.value / "src" / "test" / s"sbt_${sbtPrefix.value}",
   version := version.in(Global).value,
   sbtPlugin := isSbtPlugin,
-  publishMavenStyle := true,
-  resolvers += sbtRepo,
   scalaVersion := bySbtVersion("2.10.6", "2.12.2").value,
-  pomIncludeRepository := { _ => false },
-
-)
+) ++ publishSettings
 
 val hoarderCore = project.settings(commonSettings(isSbtPlugin = false))
 
