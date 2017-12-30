@@ -5,11 +5,10 @@ import scala.util.Try
 import scala.util.control.NonFatal
 
 
-val exactVersion = SettingKey[Option[String]]("exactVersion")
-exactVersion.in(Global) := Try("git describe --tags --exact-match".!!.trim).toOption
+lazy val exactVersion = Try("git describe --tags --exact-match".!!.trim).toOption
 
 version.in(Global) := {
-  try exactVersion.value match {
+  try exactVersion match {
     case Some(version) =>
       if (sys.env.contains("TRAVIS_BRANCH")) version else s"$version-SNAPSHOT"
     case _ =>
@@ -55,7 +54,7 @@ def publishSettings = Seq(
   },
   publishMavenStyle := true,
   pomIncludeRepository := { _ => false },
-  PgpKeys.publishSignedConfiguration := publishConfiguration.value.withOverwrite(isSnapshot.value)
+  PgpKeys.publishSignedConfiguration := PgpKeys.publishSignedConfiguration.value.withOverwrite(isSnapshot.value)
 )
 
 def commonSettings(isSbtPlugin: Boolean = true, shouldPublish: Boolean = true) = Seq(
@@ -64,6 +63,7 @@ def commonSettings(isSbtPlugin: Boolean = true, shouldPublish: Boolean = true) =
   version := version.in(Global).value,
   sbtPlugin := isSbtPlugin,
   scalaVersion := bySbtVersion("2.10.6", "2.12.2").value,
+  resolvers += sbtRepo,
 ) ++ publishSettings
 
 val hoarderCore = project.settings(commonSettings(isSbtPlugin = false))
@@ -93,4 +93,8 @@ val root = project.aggregate(hoarderCore, hoarder, hoarderTests, hoarderAmazon, 
   }
 ).settings(noPublishSettings)
 
+publishSettings
+
 noPublishSettings
+
+addCommandAlias("finalizeRelease", if(exactVersion.isEmpty) "" else "sonatypeRelease")
