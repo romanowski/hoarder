@@ -1,7 +1,33 @@
 import HoarderSettings.autoimport._
 
-/*version.in(Global) := Option(System.getenv("HOARDER_CI_VERSION"))
-  .getOrElse("1.0.3-SNAPSHOT")*/
+import scala.sys.process._
+import scala.util.Try
+import scala.util.control.NonFatal
+
+
+val exactVersion = SettingKey[Option[String]]("exactVersion")
+exactVersion.in(Global) := Try("git describe --tags --exact-match".!!).toOption
+
+version.in(Global) := {
+  try {
+    val (version, distance) = exactVersion.value match {
+      case Some(version) =>
+        version -> 0
+      case _ =>
+        val output = "git describe --tags".!!.split('-')
+        ???
+    }
+    if (!sys.env.contains("TRAVIS_BRANCH")) {
+      val commit = "git rev-parse HEAD".!!
+      s"$version-SNAPSHOT-$distance-${commit.take(7)}"
+    } else if (distance == 0) version else s"$version-M$distance"
+  } catch {
+    case NonFatal(e) =>
+      print("[ERROR] Unable to compute version. Falling back to 0.1.0-SNAPSHOT")
+      e.printStackTrace()
+      "0.1.0-SNAPSHOT"
+  }
+}
 
 crossSbtVersions := Seq("0.13.16", "1.0.2")
 
@@ -11,8 +37,8 @@ def sbtRepo = {
 }
 
 def noPublishSettings = Seq(
-  releaseEarly := {},
-  //publishArtifact := false
+  publishArtifact := false,
+  publishArtifact.in(publishLocal) := true
 )
 
 inThisBuild(List(
@@ -27,13 +53,9 @@ inThisBuild(List(
     </scm>
     ),
   organization := "com.github.romanowski",
-  pgpPublicRing := file("ci-scripts/pubring.asc"),
-  pgpSecretRing := file("ci-scripts/secring.asc"),
-  releaseEarlyEnableLocalReleases := true,
-  releaseEarlyWith := SonatypePublisher
 ))
 
-def commonSettings(isSbtPlugin: Boolean = true) =  Seq(
+def commonSettings(isSbtPlugin: Boolean = true) = Seq(
   (unmanagedSourceDirectories in Compile) += baseDirectory.value / "src" / "main" / s"sbt_${sbtPrefix.value}",
   (unmanagedSourceDirectories in Test) += baseDirectory.value / "src" / "test" / s"sbt_${sbtPrefix.value}",
   version := version.in(Global).value,
