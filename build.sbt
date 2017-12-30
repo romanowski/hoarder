@@ -29,6 +29,7 @@ inThisBuild(List(
   organization := "com.github.romanowski",
   pgpPublicRing := file("ci-scripts/pubring.asc"),
   pgpSecretRing := file("ci-scripts/secring.asc"),
+  releaseEarlyEnableLocalReleases := true,
   releaseEarlyWith := SonatypePublisher
 ))
 
