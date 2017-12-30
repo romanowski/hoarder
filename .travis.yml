@@ -16,11 +16,10 @@ cache:
 
 env:
   matrix:
-   # - scriptName=sbtTests-1.0
-   # - scriptName=integrationTest
-   # - scriptName=sbtTests-0.13
-   # - scriptName=s3-integration
-    - scriptName=quickTest
+    - scriptName=sbtTests-1.0
+    - scriptName=integrationTest
+    - scriptName=sbtTests-0.13
+    - scriptName=s3-integration
 
 deploy:
   on:
@@ -30,7 +29,6 @@ after_success:
   - bash ci-scripts/deploy.sh
 
 script:
-  - openssl version #remove after build
   - echo Will run ci-scripts/$scriptName.sh
   - bash ci-scripts/$scriptName.sh
 
