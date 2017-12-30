@@ -30,7 +30,7 @@ object PluginTests extends AutoPlugin {
       testIncCompilation, allCompilationKey := Nil) ++
       testRecompilationIn(Compile, Test)
 
-  private val runTestKey = TaskKey[Unit]("hoarder:test:runTest-TODO-remove??")
+  private val runTestKey = TaskKey[Unit]("hoarder:test:runTest")
   private val testCacheImportKey = TaskKey[Unit]("testCacheImport")
   private val allCompilationKey = TaskKey[Seq[CompilationResult]]("test:allIncCompileResult")
 

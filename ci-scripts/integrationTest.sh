@@ -1,7 +1,7 @@
 #TODO - I need to cross compile this!
 set -o xtrace
 rm -r -f test-ws
-export HOARDER_CI_VERSION="1.0.1-a-test-version"
+export HOARDER_CI_VERSION="hoarder-test-version"
 
 sbt '^publishLocal' && \
     ls -alR test-ws
