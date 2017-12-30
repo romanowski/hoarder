@@ -9,7 +9,7 @@ import scala.util.control.NonFatal
 lazy val exactVersion = Try("git describe --tags --exact-match".!!.trim).toOption
 val shouldReleaseAsSnapshot = exactVersion.isEmpty || !sys.env.contains("TRAVIS_BRANCH")
 
-version.in(Global) := {
+version.in(Global) := sys.env.get("HOARDER_CI_VERSION").getOrElse {
   try exactVersion match {
     case Some(version) =>
       if (shouldReleaseAsSnapshot) s"$version-SNAPSHOT" else version
@@ -28,7 +28,12 @@ version.in(Global) := {
 
 crossSbtVersions := Seq("0.13.16", "1.0.2")
 
-
+inThisBuild {
+  resolvers += {
+    import sbt.Resolver._
+    url("sbt-release-repo", new URL(s"$TypesafeRepositoryRoot/ivy-releases/"))(ivyStylePatterns)
+  }
+}
 
 def noPublishSettings = Seq(
   publishTo := Some(Resolver.file("my-local", file(".") / "repo")(Resolver.defaultIvyPatterns)),
@@ -64,10 +69,6 @@ def commonSettings(isSbtPlugin: Boolean = true, shouldPublish: Boolean = true) =
   version := version.in(Global).value,
   sbtPlugin := isSbtPlugin,
   scalaVersion := bySbtVersion("2.10.6", "2.12.2").value,
-  resolvers += {
-    import sbt.Resolver._
-    url("sbt-release-repo", new URL(s"$TypesafeRepositoryRoot/ivy-releases/"))(ivyStylePatterns)
-  }
 ) ++ publishSettings
 
 val hoarderCore = project.settings(commonSettings(isSbtPlugin = false))
