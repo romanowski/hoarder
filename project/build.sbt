@@ -6,4 +6,9 @@ libraryDependencies += {
   else "org.scala-sbt" % "scripted-plugin" % sbtVersion.value
 }
 
+resolvers += {
+  import sbt.Resolver._
+  url("sbt-release-repo", new URL(s"$TypesafeRepositoryRoot/ivy-releases/"))(ivyStylePatterns)
+}
+
 

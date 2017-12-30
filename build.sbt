@@ -1,4 +1,5 @@
 import HoarderSettings.autoimport._
+import sbt.file
 
 import scala.sys.process._
 import scala.util.Try
@@ -6,11 +7,12 @@ import scala.util.control.NonFatal
 
 
 lazy val exactVersion = Try("git describe --tags --exact-match".!!.trim).toOption
+val shouldReleaseAsSnapshot = exactVersion.isEmpty || !sys.env.contains("TRAVIS_BRANCH")
 
 version.in(Global) := {
   try exactVersion match {
     case Some(version) =>
-      if (sys.env.contains("TRAVIS_BRANCH")) version else s"$version-SNAPSHOT"
+      if (shouldReleaseAsSnapshot) s"$version-SNAPSHOT" else version
     case _ =>
       val output = "git describe --tags".!!.trim.split('-')
       val version = output.dropRight(2).mkString("-")
@@ -26,10 +28,7 @@ version.in(Global) := {
 
 crossSbtVersions := Seq("0.13.16", "1.0.2")
 
-def sbtRepo = {
-  import sbt.Resolver._
-  url("sbt-release-repo", new URL(s"$TypesafeRepositoryRoot/ivy-releases/"))(ivyStylePatterns)
-}
+
 
 def noPublishSettings = Seq(
   publishTo := Some(Resolver.file("my-local", file(".") / "repo")(Resolver.defaultIvyPatterns)),
@@ -50,11 +49,13 @@ def publishSettings = Seq(
   organization := "com.github.romanowski",
   publishTo := {
     import Opts.resolver._
-    Some(if (isSnapshot.value) sonatypeSnapshots else sonatypeStaging)
+    Some(if (shouldReleaseAsSnapshot) sonatypeSnapshots else sonatypeStaging)
   },
   publishMavenStyle := true,
   pomIncludeRepository := { _ => false },
-  PgpKeys.publishSignedConfiguration := PgpKeys.publishSignedConfiguration.value.withOverwrite(isSnapshot.value)
+  PgpKeys.publishSignedConfiguration := PgpKeys.publishSignedConfiguration.value.withOverwrite(isSnapshot.value),
+  pgpSecretRing := file("private-secring.asc"),
+  pgpPublicRing := file("private-pubring.asc")
 )
 
 def commonSettings(isSbtPlugin: Boolean = true, shouldPublish: Boolean = true) = Seq(
@@ -63,7 +64,10 @@ def commonSettings(isSbtPlugin: Boolean = true, shouldPublish: Boolean = true) =
   version := version.in(Global).value,
   sbtPlugin := isSbtPlugin,
   scalaVersion := bySbtVersion("2.10.6", "2.12.2").value,
-  resolvers += sbtRepo,
+  resolvers += {
+    import sbt.Resolver._
+    url("sbt-release-repo", new URL(s"$TypesafeRepositoryRoot/ivy-releases/"))(ivyStylePatterns)
+  }
 ) ++ publishSettings
 
 val hoarderCore = project.settings(commonSettings(isSbtPlugin = false))
@@ -97,4 +101,4 @@ publishSettings
 
 noPublishSettings
 
-addCommandAlias("finalizeRelease", if(exactVersion.isEmpty) "" else "sonatypeRelease")
+addCommandAlias("finalizeRelease", if (shouldReleaseAsSnapshot) "state" else "sonatypeRelease")
