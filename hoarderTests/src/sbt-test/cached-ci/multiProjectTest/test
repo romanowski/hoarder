@@ -4,7 +4,7 @@ $ touch .cached-compilation
 > preBuild
 $ touch .cached-compilation-done
 -> testCacheImport
-$ absent .hoarder-cache/multiprojecttest
+$ absent .hoarder-cache/default-version/multiprojecttest
 $ delete .cached-compilation-done
 $ delete .cached-compilation
 > clean
@@ -12,7 +12,7 @@ $ delete .cached-compilation
 # export=true use=false
 $ touch .shouldPublishCaches
 > postBuild
-$ exists .hoarder-cache/multiprojecttest
+$ exists .hoarder-cache/default-version/multiprojecttest
 $ touch .cached-compilation
 > preBuild
 $ touch .cached-compilation-done
@@ -28,7 +28,7 @@ $ touch .shouldUseCache
 # export=false use=true
 $ delete .shouldPublishCaches
 > postBuild
-$ exists .hoarder-cache/multiprojecttest
+$ exists .hoarder-cache/default-version/multiprojecttest
 > preBuild
 > testCacheImport
 
@@ -40,7 +40,7 @@ $ touch .shouldPublishCaches
 $ delete .hoarder-cache
 > clean
 > finalProject/postBuild
-$ exists .hoarder-cache/baseProject
+$ exists .hoarder-cache/default-version/baseProject
 $ touch .cached-compilation
 > finalProject/preBuild
 $ touch .cached-compilation-done

@@ -32,7 +32,7 @@ object Stash extends HoarderEngine {
 		)
 	}
 
-	private[romanowski] val parser = {
+	private[romanowski] val stashParser = {
 		import sbt.complete.Parser._
 		import sbt.complete.Parsers._
 
@@ -42,8 +42,8 @@ object Stash extends HoarderEngine {
 			} <~ Space.*
 	}
 
-	private def askForStashLocation = Def.inputTask {
-		val (providedLabel, providedVersion) = parser.parsed
+	private[romanowski] def askForStashLocation = Def.inputTask {
+		val (providedLabel, providedVersion) = stashParser.parsed
 
 		val currentGlobalLabel = providedLabel.getOrElse(defaultProjectLabel.value)
 		val currentLocalLabel = providedVersion.getOrElse(defaultVersionLabel.value)

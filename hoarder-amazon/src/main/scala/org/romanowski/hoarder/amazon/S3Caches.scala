@@ -12,7 +12,7 @@ trait S3Caches extends DownloadableCacheSetup {
 
   def prefix: String
 
-  def dirLikePrefix = if(prefix.endsWith("/")) prefix else s"$prefix/"
+  def dirLikePrefix = if (prefix.endsWith("/")) prefix else s"$prefix/"
 
   protected def s3ClientBuilder = AmazonS3ClientBuilder.standard()
 
@@ -33,13 +33,12 @@ trait S3Caches extends DownloadableCacheSetup {
     .waitForCompletion()
 
   /** Remove current cache entry for this job. Called before new cache is exported */
-  override def invalidateCache(): Unit = {
+  override def invalidateCache(cachePrefix: String): Unit = {
     import collection.JavaConverters._
     val s3 = s3ClientBuilder.build()
-    s3.listObjects(bucketName, prefix).getObjectSummaries.asScala.foreach {
-      summary =>
-        s3.deleteObject(bucketName, summary.getKey)
-    }
-
+    val objects = s3.listObjects(bucketName, s"$prefix$cachePrefix").getObjectSummaries.asScala
+    objects.foreach { summary =>
+          s3.deleteObject(bucketName, summary.getKey)
+      }
   } // We don't need to invalidate since upload will override old entries
 }

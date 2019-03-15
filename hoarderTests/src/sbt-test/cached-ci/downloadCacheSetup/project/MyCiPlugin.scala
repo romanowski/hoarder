@@ -26,7 +26,7 @@ object MyCiSetup extends org.romanowski.hoarder.actions.ci.DownloadableCacheSetu
     IO.copyDirectory(from.toFile, cache)
   }
 
-  def invalidateCache(): Unit = IO.delete(cache)
+  def invalidateCache(prefix: String): Unit = IO.delete(new File(cache, prefix))
 }
 
 

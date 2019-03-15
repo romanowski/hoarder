@@ -30,22 +30,22 @@ class StashParserTest extends FlatSpec with Matchers {
   behavior of "Parser"
 
   it should "Parse correctly" in {
-    Stash.parser.successful("") shouldEqual(None, None)
-    Stash.parser.successful(" ") shouldEqual(None, None)
-    Stash.parser.successful("  ") shouldEqual(None, None)
-    Stash.parser.successful(" ala ola") shouldEqual(Some("ala"), Some("ola"))
-    Stash.parser.successful(" ala    ola") shouldEqual(Some("ala"), Some("ola"))
-    Stash.parser.successful("  ala    ola") shouldEqual(Some("ala"), Some("ola"))
-    Stash.parser.successful(" ala") shouldEqual(Some("ala"), None)
-    Stash.parser.successful(" ala") shouldEqual(Some("ala"), None)
-    Stash.parser.successful(" ala    ") shouldEqual(Some("ala"), None)
-    Stash.parser.successful(" ala    ") shouldEqual(Some("ala"), None)
+    Stash.stashParser.successful("") shouldEqual(None, None)
+    Stash.stashParser.successful(" ") shouldEqual(None, None)
+    Stash.stashParser.successful("  ") shouldEqual(None, None)
+    Stash.stashParser.successful(" ala ola") shouldEqual(Some("ala"), Some("ola"))
+    Stash.stashParser.successful(" ala    ola") shouldEqual(Some("ala"), Some("ola"))
+    Stash.stashParser.successful("  ala    ola") shouldEqual(Some("ala"), Some("ola"))
+    Stash.stashParser.successful(" ala") shouldEqual(Some("ala"), None)
+    Stash.stashParser.successful(" ala") shouldEqual(Some("ala"), None)
+    Stash.stashParser.successful(" ala    ") shouldEqual(Some("ala"), None)
+    Stash.stashParser.successful(" ala    ") shouldEqual(Some("ala"), None)
 
 
-    Stash.parser.failed(" ala ula ola")
-    Stash.parser.failed(" ala\tula\tola")
-    Stash.parser.failed("ala")
-    Stash.parser.failed("ala ola")
+    Stash.stashParser.failed(" ala ula ola")
+    Stash.stashParser.failed(" ala\tula\tola")
+    Stash.stashParser.failed("ala")
+    Stash.stashParser.failed("ala ola")
   }
 }
 
