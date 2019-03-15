@@ -68,7 +68,7 @@ def commonSettings(isSbtPlugin: Boolean = true, shouldPublish: Boolean = true) =
   (unmanagedSourceDirectories in Test) += baseDirectory.value / "src" / "test" / s"sbt_${sbtPrefix.value}",
   version := version.in(Global).value,
   sbtPlugin := isSbtPlugin,
-  scalaVersion := bySbtVersion("2.10.6", "2.12.2").value,
+  scalaVersion := (if(isLegacySbt.value) "2.10.6" else "2.12.2"),
 ) ++ publishSettings
 
 val hoarderCore = project.settings(commonSettings(isSbtPlugin = false))
@@ -77,7 +77,7 @@ val hoarder = project.settings(commonSettings()).dependsOn(hoarderCore)
 
 val hoarderAmazon = project.in(file("hoarder-amazon")).dependsOn(hoarder).settings(commonSettings())
 
-val hoarderTests = project.dependsOn(hoarderAmazon)
+val hoarderTests = project.enablePlugins(SbtPlugin).dependsOn(hoarderAmazon)
   .settings(commonSettings() ++ noPublishSettings)
   .settings(
     publishLocal := {
