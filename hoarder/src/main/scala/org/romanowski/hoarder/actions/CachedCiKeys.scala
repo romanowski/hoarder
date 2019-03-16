@@ -9,12 +9,12 @@ trait CachedCiKeys {
   val preBuild = TaskKey[Unit]("preBuild", "Task indented to be run before CI build. " +
     "It will download cache for verification build and clean up old one for post-merge builds.")
 
-  val storeCache = InputKey[Unit]("storeCache", preBuild.key.description.get)
+  val storeCache = InputKey[Unit]("storeCache", "Stores cache from predefined location. Accepts project and version parameters to customize location within cache.")
 
   val postBuild = TaskKey[Unit]("postBuild", "Task indented to be run after CI build. " +
     "It will upload cache for post-merge builds.")
 
-  val loadCache = InputKey[Unit]("loadCache", preBuild.key.description.get)
+  val loadCache = InputKey[Unit]("loadCache", "Loads cache from predefined location. Accepts project and version parameters to customize location within cache.")
 
   // Needed for tests
   private[hoarder] val cleanCiCaches = InputKey[Unit]("hoarderCleanCiCaches", "Internal hoarder task")
