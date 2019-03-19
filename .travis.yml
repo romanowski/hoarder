@@ -29,8 +29,12 @@ after_success:
   - bash ci-scripts/deploy.sh
 
 script:
-  - echo Will run ci-scripts/$scriptName.sh
-  - bash ci-scripts/$scriptName.sh
+  - if [ -z $TRAVIS_TAG ]; then
+      echo Will run ci-scripts/$scriptName.sh
+      bash ci-scripts/$scriptName.sh
+    else
+      echo Building tag $TRAVIS_TAG, skipping build
+    fi
 
 jdk:
   - oraclejdk8
