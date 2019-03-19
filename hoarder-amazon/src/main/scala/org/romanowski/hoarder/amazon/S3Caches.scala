@@ -36,7 +36,7 @@ trait S3Caches extends DownloadableCacheSetup {
   override def invalidateCache(cachePrefix: String): Unit = {
     import collection.JavaConverters._
     val s3 = s3ClientBuilder.build()
-    val objects = s3.listObjects(bucketName, s"$prefix$cachePrefix").getObjectSummaries.asScala
+    val objects = s3.listObjects(bucketName, s"$dirLikePrefix$cachePrefix").getObjectSummaries.asScala
     objects.foreach { summary =>
           s3.deleteObject(bucketName, summary.getKey)
       }
