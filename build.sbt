@@ -60,7 +60,8 @@ def publishSettings = Seq(
   pomIncludeRepository := { _ => false },
   PgpKeys.publishSignedConfiguration := PgpKeys.publishSignedConfiguration.value.withOverwrite(isSnapshot.value),
   pgpSecretRing := file("private-secring.asc"),
-  pgpPublicRing := file("private-pubring.asc")
+  pgpPublicRing := file("private-pubring.asc"),
+  updateOptions := updateOptions.value.withGigahorse(false)
 )
 
 def commonSettings(isSbtPlugin: Boolean = true, shouldPublish: Boolean = true) = Seq(

@@ -30,7 +30,7 @@ after_success:
 
 script:
   - echo Will run ci-scripts/$scriptName.sh
-  - bash ci-scripts/$scriptName.sh
+  - if [ -z $TRAVIS_TAG ]; then bash ci-scripts/$scriptName.sh; fi
 
 jdk:
   - oraclejdk8
