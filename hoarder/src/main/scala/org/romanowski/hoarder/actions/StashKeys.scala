@@ -10,6 +10,9 @@ trait StashKeys {
   val stashCleanKey = InputKey[Unit]("stashClean",
     "Clean exported compilation results from global location.")
 
+  val stashPrefixKey = TaskKey[String]("stashPrefix",
+    "Prefix used to stash code. By default point to scala binary version")
+
   val defaultVersionLabel = SettingKey[String]("hoarder:defaultVersionLabel",
     "Default version label for stash/stashApply")
   val defaultProjectLabel = SettingKey[String]("hoarder:defaultProjectLabel",

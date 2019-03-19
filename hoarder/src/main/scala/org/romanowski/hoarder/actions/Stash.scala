@@ -26,13 +26,14 @@ object Stash extends HoarderEngine {
 			stashImpl,
 			stashApplyImpl,
 			stashCleanImpl,
+			stashKeyImpl,
 			aggregate.in(stashCleanKey) := false,
 			aggregate.in(stashKey) := true,
 			aggregate.in(stashApplyKey) := true
 		)
 	}
 
-	private[romanowski] val parser = {
+	private[romanowski] val stashParser = {
 		import sbt.complete.Parser._
 		import sbt.complete.Parsers._
 
@@ -42,8 +43,8 @@ object Stash extends HoarderEngine {
 			} <~ Space.*
 	}
 
-	private def askForStashLocation = Def.inputTask {
-		val (providedLabel, providedVersion) = parser.parsed
+	private[romanowski] def askForStashLocation = Def.inputTask {
+		val (providedLabel, providedVersion) = stashParser.parsed
 
 		val currentGlobalLabel = providedLabel.getOrElse(defaultProjectLabel.value)
 		val currentLocalLabel = providedVersion.getOrElse(defaultVersionLabel.value)
@@ -53,7 +54,7 @@ object Stash extends HoarderEngine {
 	}
 
 	private def stashApplyImpl = stashApplyKey := {
-		val globalCache = askForStashLocation.evaluated.resolve(scalaBinaryVersion.value)
+		val globalCache = askForStashLocation.evaluated.resolve(stashPrefixKey.value)
 
 		val importedClasses = importCacheSetups.value.map { cache =>
 			importCacheTaskImpl(cache, globalCache)
@@ -74,13 +75,15 @@ object Stash extends HoarderEngine {
 	}
 
 	private def stashImpl = stashKey := {
-		val globalCache = askForStashLocation.evaluated.resolve(scalaBinaryVersion.value)
+		val globalCache = askForStashLocation.evaluated.resolve(stashPrefixKey.value)
 
 		val exportedClasses = exportCacheSetups.value.map(exportCacheTaskImpl(globalCache))
 
 		streams.value.log.info(
 			s"Project ${name.value} stashed to $globalCache using classes from $exportedClasses")
 	}
+
+	private def stashKeyImpl = stashPrefixKey := scalaBinaryVersion.value
 }
 
 

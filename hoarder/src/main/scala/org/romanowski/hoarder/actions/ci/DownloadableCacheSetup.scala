@@ -21,7 +21,7 @@ trait DownloadableCacheSetup extends CachedCI.Setup {
 	def uploadCache(from: Path): Unit
 
 	/** `doExportCache` will export cache for whole project to provided path */
-	override def exportCache(): CacheProgress = new CacheProgress {
+	override def exportCache(prefix: String): CacheProgress = new CacheProgress {
 		lazy val currentTmpDir: Path = Files.createTempDirectory("downloadableCache")
 
 		override def done(): Unit = {
@@ -29,17 +29,17 @@ trait DownloadableCacheSetup extends CachedCI.Setup {
 			IO.delete(currentTmpDir.toFile)
 		}
 
-		override def nextPart[T](op: (Path) => T): T = op(currentTmpDir)
+		override def nextPart[T](op: (Path) => T): T = op(currentTmpDir.resolve(prefix))
 	}
 
 	/** `doLoadCache` will load cache for whole project from provided path */
-	override def loadCache(): CacheProgress = {
+	override def loadCache(prefix: String): CacheProgress = {
 		val currentTmpDir = Files.createTempDirectory("downloadableCache")
-		val downloadedCache = downloadCache(currentTmpDir)
+		val downloadedCache = downloadCache(currentTmpDir.resolve(prefix))
 		new CacheProgress {
 			override def done(): Unit = IO.delete(downloadedCache.toFile)
 
-			override def nextPart[T](op: (Path) => T): T = op(downloadedCache)
+			override def nextPart[T](op: (Path) => T): T = op(downloadedCache.resolve(prefix))
 		}
 
 	}

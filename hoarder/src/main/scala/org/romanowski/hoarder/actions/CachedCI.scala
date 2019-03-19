@@ -10,6 +10,7 @@ package hoarder.actions
 import java.nio.file.Path
 
 import org.romanowski.HoarderKeys._
+import org.romanowski.hoarder.actions.Stash.stashParser
 import org.romanowski.hoarder.core.HoarderEngine
 import sbt.Keys._
 import sbt._
@@ -49,17 +50,24 @@ object CachedCI extends HoarderEngine {
     def shouldUseCache(): Boolean
 
     /** Remove current cache entry for this job. Called before new cache is exported */
-    def invalidateCache(): Unit
+    def invalidateCache(prefix: String): Unit
 
     /** `doExportCache` will export cache for whole project to provided path */
-    def exportCache(): CacheProgress
+    def exportCache(prefix: String): CacheProgress
 
     /** `doLoadCache` will load cache for whole project from provided path */
-    def loadCache(): CacheProgress
+    def loadCache(prefix: String): CacheProgress
+
+    def prefixFor(providedProject: Option[String], providedVersion: Option[String]): String =
+      providedProject.getOrElse("default") + "-" + providedVersion.getOrElse("version")
+
+    private[romanowski] final def prefix(input: (Option[String], Option[String])) = prefixFor(input._1, input._2)
+
   }
 
   trait CacheProgress {
     def nextPart[T](op: Path => T): T
+
     def done(): Unit
   }
 
@@ -101,23 +109,33 @@ object CachedCI extends HoarderEngine {
     },
     aggregate.in(doImportCiCaches) := true,
     aggregate.in(doExportCiCaches) := true,
-    preBuild := Def.taskDyn {
-      val setup = cachedCiSetup.value
-
-      if (setup.shouldUseCache()) invokeOnProgress(setup.loadCache(), doImportCiCaches)
-      else Def.task(streams.value.log.info(s"Cache won't be used."))
-    }.value,
-    postBuild := Def.taskDyn {
-      val setup = cachedCiSetup.value
-      if (setup.shouldPublishCaches()) {
-        setup.invalidateCache()
-        invokeOnProgress(setup.exportCache(), doExportCiCaches)
-      } else Def.task(streams.value.log.info(s"Cache won't be published."))
-    }.value,
+    preBuild := loadCache.toTask("").value,
+    postBuild := storeCache.toTask("").value,
     aggregate.in(preBuild) := false,
     aggregate.in(postBuild) := false,
-    cleanCiCaches := cachedCiSetup.value.invalidateCache()
+    aggregate.in(storeCache) := false,
+    aggregate.in(loadCache) := false,
+    loadCache := Def.inputTaskDyn {
+      val setup = cachedCiSetup.value
+
+      val prefix = setup.prefix(stashParser.parsed)
+      if (setup.shouldUseCache()) invokeOnProgress(setup.loadCache(prefix), doImportCiCaches)
+      else Def.task(streams.value.log.info(s"Cache won't be used."))
+    }.evaluated,
+    storeCache := Def.inputTaskDyn {
+      val setup = cachedCiSetup.value
+      val prefix = setup.prefix(stashParser.parsed)
+      if (setup.shouldPublishCaches()) {
+        setup.invalidateCache(prefix)
+        invokeOnProgress(setup.exportCache(prefix), doExportCiCaches)
+      } else Def.task(streams.value.log.info(s"Cache won't be published."))
+    }.evaluated,
+    cleanCiCaches := {
+      val setup = cachedCiSetup.value
+      setup.invalidateCache(setup.prefix(stashParser.parsed))
+    }
   )
+
 
   private def aggregatedTaskOnState(key: TaskKey[_])(state: State): Unit = {
     val extracted = Project.extract(state)

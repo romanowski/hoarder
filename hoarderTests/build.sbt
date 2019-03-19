@@ -2,8 +2,10 @@ name := "hoarder-tests"
 
 scriptedLaunchOpts := { scriptedLaunchOpts.value ++
   Seq(
-    "-Xmx1024M",
-    "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5015",
+    "-Xmx2024M",
+    "-XX:MetaspaceSize=256M",
+    "-XX:MaxMetaspaceSize=512M",
     "-Dplugin.version=" + version.value
   )
 }
+scriptedBufferLog := false

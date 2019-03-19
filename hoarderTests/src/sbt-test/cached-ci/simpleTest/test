@@ -12,7 +12,7 @@ $ delete .cached-compilation
 # export=true use=false
 $ touch .shouldPublishCaches
 > postBuild
-$ exists .hoarder-cache/simpletest
+$ exists .hoarder-cache/default-version/simpletest
 $ touch .cached-compilation
 > preBuild
 $ touch .cached-compilation-done
@@ -28,6 +28,6 @@ $ touch .shouldUseCache
 # export=false use=true
 $ delete .shouldPublishCaches
 > postBuild
-$ exists .hoarder-cache/simpletest
+$ exists .hoarder-cache/default-version/simpletest
 > preBuild
 > testCacheImport

@@ -30,19 +30,19 @@ trait TravisFlow { self: CachedCI.Setup =>
 
 case class TravisPRValidation(cacheDirectory: Path = TravisPRValidation.defaultLocation,
                               override val cachedBranches: Set[String] = Set.empty) extends CachedCI.Setup with TravisFlow {
-  override def invalidateCache(): Unit = IO.delete(cacheDirectory.toFile)
+  override def invalidateCache(prefix: String): Unit = IO.delete(cacheDirectory.resolve(prefix).toFile)
 
-  private val NoopProgress = new CacheProgress {
+  private case class PrefixedProgress(prefix: String) extends CacheProgress {
     def done(): Unit = {}
 
-    override def nextPart[T](op: (Path) => T): T = op(cacheDirectory)
+    override def nextPart[T](op: (Path) => T): T = op(cacheDirectory.resolve(prefix))
   }
 
   /** `doExportCache` will export cache for whole project to provided path */
-  override def exportCache(): CacheProgress = NoopProgress
+  override def exportCache(prefix: String): CacheProgress = PrefixedProgress(prefix)
 
   /** `doLoadCache` will load cache for whole project from provided path */
-  override def loadCache(): CacheProgress = NoopProgress
+  override def loadCache(prefix: String): CacheProgress = PrefixedProgress(prefix)
 }
 
 object TravisPRValidation {
