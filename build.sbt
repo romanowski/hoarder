@@ -26,7 +26,7 @@ version.in(Global) := sys.env.get("HOARDER_CI_VERSION").getOrElse {
   }
 }
 
-crossSbtVersions := Seq("0.13.16", "1.0.2")
+crossSbtVersions := Seq("0.13.18", "1.0.2")
 
 inThisBuild {
   resolvers += {

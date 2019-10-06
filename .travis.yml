@@ -29,4 +29,4 @@ script:
   - if [ -z $TRAVIS_TAG ]; then bash ci-scripts/$scriptName.sh; fi
 
 jdk:
-  - oraclejdk8
+  - openjdk8
