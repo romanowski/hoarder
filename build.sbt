@@ -103,4 +103,7 @@ publishSettings
 
 noPublishSettings
 
-addCommandAlias("finalizeRelease", if (shouldReleaseAsSnapshot) "state" else "sonatypeRelease")
+addCommandAlias("doRelease",
+  if (shouldReleaseAsSnapshot) "publishSigned"
+  else ";publishSigned;sonatypeRelease"
+)
