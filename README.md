@@ -17,7 +17,7 @@ Using caches will not make your local workspace read-only. Once a cache is impor
 In order to use Hoarder in your project just add it as a standard sbt plugin (for a given project or globally):
 
 ```scala
-addSbtPlugin("com.github.romanowski" % "hoarder" % "1.0.2")
+addSbtPlugin("com.github.romanowski" % "hoarder" % "1.0.5")
 ```
 
 Hoarder does not have any stable release so far, and you can track progress for sbt [0.13.x](https://github.com/romanowski/hoarder/milestone/1) and [1.0.x](https://github.com/romanowski/hoarder/milestone/2)
