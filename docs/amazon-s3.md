@@ -6,7 +6,7 @@ In many situations we need to carry caches across different machine (e.g. from I
 
 Steps to enable s3 caches in your project:
 
- - add hoarder-amazon plugin to your build by adding following line to your `plugins.sbt` file (or any .sbt file in project directory): `addSbtPlugin("com.github.romanowski" %% "hoarder-amazon" % "1.2.0")`
+ - add hoarder-amazon plugin to your build by adding following line to your `plugins.sbt` file (or any .sbt file in project directory): `addSbtPlugin("com.github.romanowski" %% "hoarder-amazon" % "1.0.5")`
  - create bucket (e.g. `hoarder-test`) and create user that has permission to read and write to that bucket (it should has `Programmatic access` type and remember to note down access key ID and secret access key). Example policy attached to user:
  ```json
   {
