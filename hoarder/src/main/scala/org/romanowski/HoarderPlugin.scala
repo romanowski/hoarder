@@ -26,7 +26,7 @@ object HoarderKeys extends StashKeys with CachedCiKeys with CachedReleaseKeys {
 		TaskKey[T](s"hoarder:internal:$name", s"Internal hoarder task: $name. Please do not use.")
 
 
-	// TODO we may still misss some sources directories
+	// TODO we may still miss some sources directories
 	// Find better way for finding source dir roots
 	case class CacheSetup(allSources: Seq[File],
 		                    sourceRoots: Seq[File],
@@ -36,6 +36,7 @@ object HoarderKeys extends StashKeys with CachedCiKeys with CachedReleaseKeys {
 	                      analysisFile: File,
 	                      relativeCacheLocation: Path,
 	                      overrideExistingCache: Boolean,
+												allowApplyingEmptyCache: Boolean,
 	                      cleanOutputMode: CleanOutputMode,
 	                      zipAnalysisFile: Boolean,
 	                      configuration: Configuration,
@@ -49,6 +50,7 @@ object HoarderKeys extends StashKeys with CachedCiKeys with CachedReleaseKeys {
 	val cleanOutputMode = SettingKey[CleanOutputMode]("hoarder-cleanOutputMode", "What should be cleaned prior to cache extraction")
 	val zipAnalysisCache = SettingKey[Boolean]("hoarder-zipAnalysisFile", "Determines if analysis file will be zipped or not")
 	val overrideExistingCache = SettingKey[Boolean]("overrideExistingCache", "Override existing stash")
+	val allowApplyingEmptyCache = SettingKey[Boolean]("allowApplyingEmptyCache", "Allow applying an empty stash")
 	val enabledConfigurations = SettingKey[Seq[Configuration]]("hoarder:enabledConfigurations",
 		"Configuration that hoarder will use")
 
@@ -110,6 +112,7 @@ object HoarderPlugin extends AutoPlugin {
 			analysisFile = (streams in compileIncSetup).value.cacheDirectory / compileAnalysisFilename.value,
 			relativeCacheLocation = relativeCacheLocation,
 			overrideExistingCache = overrideExistingCache.value,
+			allowApplyingEmptyCache = allowApplyingEmptyCache.value,
 			cleanOutputMode = cleanOutputMode.value,
 			zipAnalysisFile = zipAnalysisCache.value,
 			configuration = configuration.value,
@@ -122,6 +125,7 @@ object HoarderPlugin extends AutoPlugin {
 		cleanOutputMode := CleanClasses,
 		zipAnalysisCache := true,
 		overrideExistingCache := false,
+		allowApplyingEmptyCache := false,
 		importCacheSetups := Nil,
 		exportCacheSetups := Nil
 	)

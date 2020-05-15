@@ -1,0 +1,34 @@
+# Test of the default behavior (throws an exception)
+> clean
+> set org.romanowski.HoarderKeys.globalStashLocation in ThisBuild := (baseDirectory in LocalRootProject).value / ".hoarder-cache"
+> stashClean
+> stash
+$ rm -rf .hoarder-cache/monorepoProjectTest/HEAD/2.13/modules/foo
+> clean
+> set org.romanowski.HoarderKeys.globalStashLocation in ThisBuild := (baseDirectory in LocalRootProject).value / ".hoarder-cache"
+> stashApply
+$ rm -rf .hoarder-cache
+
+# Test of the behavior to not allow applying empty cache by `allowApplyingEmptyCache` setting (throws an exception)
+> clean
+> set org.romanowski.HoarderKeys.globalStashLocation in ThisBuild := (baseDirectory in LocalRootProject).value / ".hoarder-cache"
+> stashClean
+> stash
+$ rm -rf .hoarder-cache/monorepoProjectTest/HEAD/2.13/modules/foo
+> clean
+> set org.romanowski.HoarderKeys.globalStashLocation in ThisBuild := (baseDirectory in LocalRootProject).value / ".hoarder-cache"
+> set org.romanowski.HoarderKeys.allowApplyingEmptyCache in ThisBuild := false
+> stashApply
+$ rm -rf .hoarder-cache
+
+# Test of the behavior to allow applying empty cache (doesn't throw an exception)
+> clean
+> set org.romanowski.HoarderKeys.globalStashLocation in ThisBuild := (baseDirectory in LocalRootProject).value / ".hoarder-cache"
+> stashClean
+> stash
+$ rm -rf .hoarder-cache/monorepoProjectTest/HEAD/2.13/modules/foo
+> clean
+> set org.romanowski.HoarderKeys.globalStashLocation in ThisBuild := (baseDirectory in LocalRootProject).value / ".hoarder-cache"
+> set org.romanowski.HoarderKeys.allowApplyingEmptyCache in ThisBuild := true
+> stashApply
+$ rm -rf .hoarder-cache
