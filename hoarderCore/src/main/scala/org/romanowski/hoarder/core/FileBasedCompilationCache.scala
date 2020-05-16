@@ -22,7 +22,7 @@ trait FileBasedCompilationCache extends CompilationCache {
 
   override def loadCache(): Option[AnalysisContents] = {
     assert(
-      Files.isDirectory(cacheLocation) && Files.exists(cacheLocation),
+      allowApplyingEmptyCache || (Files.isDirectory(cacheLocation) && Files.exists(cacheLocation)),
       s"Cache does not exists in ${cacheLocation.toAbsolutePath()}")
 
     importAnalysisContent().flatMap {
@@ -84,7 +84,10 @@ trait FileBasedCompilationCache extends CompilationCache {
   }
 
   protected def cleanOutputMode: CleanOutputMode = CleanOutput
+
   protected def overrideExistingCache: Boolean = true
+
+  protected def allowApplyingEmptyCache: Boolean = false
 
   protected def binariesToExport(outputDir: File, from: AnalysisContents): Seq[File] =
     outputDir findInDir "*.class" //TODO use analysis
